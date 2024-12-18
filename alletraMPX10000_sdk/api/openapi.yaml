@@ -1,0 +1,2864 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: object-svc-team@hpe.com
+    name: Object service team
+  description: APIs to get information about the HPE Alletra Storage MP X10000 system
+  title: Device Type-7 APIs
+  version: 0.1.0
+servers:
+- url: /
+tags:
+- description: The buckets API allows the management of buckets
+  name: buckets
+- description: The objectstore-identities API allows management of user/groups/access-policies
+  name: objectstore-identities
+paths:
+  /api/v1/storage-systems/device-type7/{systemId}/access-policies:
+    get:
+      description: "Get all access policies for HPE Alletra Storage MP X10000 ObjectStore\
+        \ identified by {systemId}"
+      operationId: DeviceType7ListAccessPolicies
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: oData query to filter bucket by Key.
+        example: id eq "abc"
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Number of items to return at a time
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+        style: form
+      - description: The offset of the first item in the collection to return
+        example: 5
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+        style: form
+      - allowReserved: true
+        description: "Query to select only the required parameters, separated by .\
+          \ if nested"
+        example: uid
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      - allowReserved: true
+        description: |
+          A list of properties defining the sort order. This takes a single property name followed
+          by the direction to sort in, separated by a space.
+          The supported properties are `id`, `systemUid`, `tenantId`, `name` and `generation`. If not specified,
+          the default behaviour is to sort by `generation`. The supported directions are
+          `asc` and `desc` for ascending and descending respectively.
+        example: name desc
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: generation desc
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicies'
+          description: Success
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get all access policies for HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - objectstore-identities
+    post:
+      description: "Create new access policy for HPE Alletra Storage MP X10000 ObjectStore\
+        \ identified by {systemId}"
+      operationId: DeviceType7CreateAccessPolicy
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccessPolicyBody'
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Create new access policy for HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - objectstore-identities
+  /api/v1/storage-systems/device-type7/{systemId}/access-policies/{policyId}:
+    delete:
+      description: "Delete HPE Alletra Storage MP X10000 ObjectStore access policy\
+        \ identified by {policyId}"
+      operationId: DeviceType7DeleteAccessPolicyById
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every access-policy created in objectstore
+        example: policy1
+        explode: false
+        in: path
+        name: policyId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Delete HPE Alletra Storage MP X10000 ObjectStore access policy
+      tags:
+      - objectstore-identities
+    get:
+      description: "Get HPE Alletra Storage MP X10000 ObjectStore access policy identified\
+        \ by {policyId}"
+      operationId: DeviceType7GetAccessPolicyById
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every access-policy created in objectstore
+        example: policy1
+        explode: false
+        in: path
+        name: policyId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: "Query to select only the required parameters, separated by .\
+          \ if nested"
+        example: uid
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicy'
+          description: Success
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get single HPE Alletra Storage MP X10000 ObjectStore access policy
+      tags:
+      - objectstore-identities
+    put:
+      description: "Update HPE Alletra Storage MP X10000 ObjectStore access policy\
+        \ identified by {policyId}"
+      operationId: DeviceType7UpdateAccessPolicyById
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every access-policy created in objectstore
+        example: policy1
+        explode: false
+        in: path
+        name: policyId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccessPolicyBody'
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Update HPE Alletra Storage MP X10000 ObjectStore access policy
+      tags:
+      - objectstore-identities
+  /api/v1/storage-systems/device-type7/{systemId}/apply-policy:
+    put:
+      description: "Apply policy to existing user or group in HPE Alletra Storage\
+        \ MP X10000 ObjectStore identified by {systemId}"
+      operationId: ApplyPolicy
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyPolicy'
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Apply policy to existing user or group in HPE Alletra Storage MP X10000
+        ObjectStore
+      tags:
+      - objectstore-identities
+  /api/v1/storage-systems/device-type7/{systemId}/buckets:
+    get:
+      description: Get all buckets for HPE Alletra Storage MP X10000 ObjectStore
+      operationId: DeviceType7ListBuckets
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: oData query to filter bucket by Key.
+        example: id eq "abc"
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Number of items to return at a time
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+        style: form
+      - description: The offset of the first item in the collection to return
+        example: 5
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+        style: form
+      - allowReserved: true
+        description: "Query to select only the required parameters, separated by .\
+          \ if nested"
+        example: uid
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      - allowReserved: true
+        description: |
+          A list of properties defining the sort order. This takes a single property name followed
+          by the direction to sort in, separated by a space.
+          The supported properties are `systemUid`, `tenantId`, `name`, `id` and `generation`. If not specified,
+          the default behaviour is to sort by `generation`. The supported directions are
+          `asc` and `desc` for ascending and descending respectively.
+        example: name desc
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: generation desc
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BucketsList'
+          description: Success
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get all buckets for HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - buckets
+    post:
+      description: "Create new bucket in HPE Alletra Storage MP X10000 ObjectStore\
+        \ identified by {systemId}"
+      operationId: DeviceType7CreateBucket
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBucketBody'
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Create new bucket in HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - buckets
+  /api/v1/storage-systems/device-type7/{systemId}/buckets/{bucketId}:
+    delete:
+      description: "Delete bucket from HPE Alletra Storage MP X10000 ObjectStore identified\
+        \ by {bucketId}"
+      operationId: DeviceType7DeleteBucketById
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every bucket created in objectstore
+        example: bucket1
+        explode: false
+        in: path
+        name: bucketId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Delete bucket from HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - buckets
+    get:
+      description: "Get HPE Alletra Storage MP X10000 ObjectStore bucket identified\
+        \ by {bucketId}"
+      operationId: DeviceType7SingleBuckets
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every bucket created in objectstore
+        example: bucket1
+        explode: false
+        in: path
+        name: bucketId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: "Query to select only the required parameters, separated by .\
+          \ if nested"
+        example: uid
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Buckets'
+          description: Success
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get single HPE Alletra Storage MP X10000 ObjectStore bucket
+      tags:
+      - buckets
+    put:
+      description: "Edit bucket properties in HPE Alletra Storage MP X10000 ObjectStore\
+        \ identified by {systemId} and {bucketId}"
+      operationId: DeviceType7EditBucket
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every bucket created in objectstore
+        example: bucket1
+        explode: false
+        in: path
+        name: bucketId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditBucketBody'
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Edit the properties of an existing bucket in HPE Alletra Storage MP
+        X10000 ObjectStore
+      tags:
+      - buckets
+  /api/v1/storage-systems/device-type7/{systemId}/buckets/{bucketId}/capacity-history:
+    get:
+      description: Get capacity trend data of buckets
+      operationId: BucketCapacityHistory
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every bucket created in objectstore
+        example: bucket1
+        explode: false
+        in: path
+        name: bucketId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: range will define start and end time in which query has to be
+          made.
+        example: startTime eq 1605063600 and endTime eq 1605186000
+        explode: true
+        in: query
+        name: range
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: It defines granularity in minutes.
+        explode: true
+        in: query
+        name: timeIntervalMin
+        required: false
+        schema:
+          enum:
+          - 5
+          - 60
+          - 1440
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BucketCapacityHistory'
+          description: Success
+        "304":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Not Modified
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Storage system object not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get capacity trend data of buckets
+      tags:
+      - ObjectService Portal API (UI)
+  /api/v1/storage-systems/device-type7/{systemId}/groups:
+    get:
+      description: "Get all groups for HPE Alletra Storage MP X10000 ObjectStore identified\
+        \ by {systemId}"
+      operationId: DeviceType7ListGroups
+      parameters:
+      - description: Number of items to return at a time
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+        style: form
+      - description: The offset of the first item in the collection to return
+        example: 5
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+        style: form
+      - allowReserved: true
+        description: "Query to select only the required parameters, separated by .\
+          \ if nested"
+        example: uid
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: oData query to filter bucket by Key.
+        example: id eq "abc"
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      - allowReserved: true
+        description: |
+          A list of properties defining the sort order. This takes a single property name followed
+          by the direction to sort in, separated by a space.
+          The supported properties are `name`, `systemUid`, `tenantId` and `generation`. If not specified,
+          the default behaviour is to sort by `generation`. The supported directions are
+          `asc` and `desc` for ascending and descending respectively.
+        example: generation desc
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: generation desc
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetGroupDetails'
+          description: Success
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get all groups for HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - objectstore-identities
+    post:
+      description: "Create new group in HPE Alletra Storage MP X10000 ObjectStore\
+        \ identified by {systemId}"
+      operationId: DeviceType7CreateGroup
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectCreateGroupBody'
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Create new group in HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - objectstore-identities
+  /api/v1/storage-systems/device-type7/{systemId}/groups/{groupId}:
+    delete:
+      description: "Delete group from HPE Alletra Storage MP X10000 ObjectStore identified\
+        \ by {groupId}"
+      operationId: DeviceType7DeleteGroupById
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every group created in objectstore
+        example: testGroup
+        explode: false
+        in: path
+        name: groupId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Delete group from HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - objectstore-identities
+    get:
+      description: "Get single group details for HPE Alletra Storage MP X10000 ObjectStore\
+        \ identified by {groupId}"
+      operationId: DeviceType7GetGroupById
+      parameters:
+      - description: ID unique to every group created in objectstore
+        example: testGroup
+        explode: false
+        in: path
+        name: groupId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: "Query to select only the required parameters, separated by .\
+          \ if nested"
+        example: uid
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupItem'
+          description: Success
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get single group details for HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - objectstore-identities
+    put:
+      description: |
+        Update group details in HPE Alletra Storage MP X10000 ObjectStore identified by {groupId}
+      operationId: DeviceType7UpdateGroupById
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every group created in objectstore
+        example: testGroup
+        explode: false
+        in: path
+        name: groupId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObjectUpdateGroupBody'
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Update group details in HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - objectstore-identities
+  /api/v1/storage-systems/device-type7/{systemId}/users:
+    get:
+      description: "Get users properties in ObjectStore identified by {systemId}"
+      operationId: DeviceType7GetUser
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: oData query to filter bucket by Key.
+        example: id eq "abc"
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: Number of items to return at a time
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+        style: form
+      - description: The offset of the first item in the collection to return
+        example: 5
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+        style: form
+      - allowReserved: true
+        description: "Query to select only the required parameters, separated by .\
+          \ if nested"
+        example: uid
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      - allowReserved: true
+        description: |
+          A list of properties defining the sort order. This takes a single property name followed
+          by the direction to sort in, separated by a space.
+          The supported properties are `systemUid`, `tenantId`, `name`, `id` and `generation`. If not specified,
+          the default behaviour is to sort by `generation`. The supported directions are
+          `asc` and `desc` for ascending and descending respectively.
+        example: name desc
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: generation desc
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeUsersList'
+          description: Success
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get the properties of existing users in ObjectStore
+      tags:
+      - objectstore-identities
+    post:
+      description: "Create new user in HPE Alletra Storage MP X10000 device identified\
+        \ by {systemId}"
+      operationId: DeviceType7CreateUser
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDetails'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDetails'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Create new user in HPE Alletra Storage MP X10000 device
+      tags:
+      - objectstore-identities
+  /api/v1/storage-systems/device-type7/{systemId}/users/{userId}:
+    delete:
+      description: "Delete user from HPE Alletra Storage MP X10000 ObjectStore identified\
+        \ by {bucketId}"
+      operationId: DeviceType7DeleteUserById
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every user created in objectstore
+        example: testUser
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Delete user from HPE Alletra Storage MP X10000 ObjectStore
+      tags:
+      - objectstore-identities
+    get:
+      description: "Get user properties in ObjectStore identified by {systemId} and\
+        \ {userId}"
+      operationId: DeviceType7GetSingleUser
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every user created in objectstore
+        example: testUser
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - allowReserved: true
+        description: "Query to select only the required parameters, separated by .\
+          \ if nested"
+        example: uid
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListDetails'
+          description: Success
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/taskResponseUi'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Get the properties of an existing user in ObjectStore
+      tags:
+      - objectstore-identities
+    put:
+      description: "Edit user properties in HPE Alletra Storage MP X10000 ObjectStore\
+        \ identified by {systemId} and {userId}"
+      operationId: DeviceType7EditUser
+      parameters:
+      - description: ID unique to every object service device
+        example: 8UW0002928
+        explode: false
+        in: path
+        name: systemId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: ID unique to every user created in objectstore
+        example: testUser
+        explode: false
+        in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDetailsEdit'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDetails'
+          description: Created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Internal / unexpected error
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: Appliance in maintenance mode
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internalErrorResponseUi'
+          description: unexpected error
+      summary: Edit the properties of an existing user in HPE Alletra Storage MP X10000
+        ObjectStore
+      tags:
+      - objectstore-identities
+components:
+  parameters:
+    bucketId:
+      description: ID unique to every bucket created in objectstore
+      example: bucket1
+      explode: false
+      in: path
+      name: bucketId
+      required: true
+      schema:
+        type: string
+      style: simple
+    groupIdUi:
+      description: ID unique to every group created in objectstore
+      example: testGroup
+      explode: false
+      in: path
+      name: groupId
+      required: true
+      schema:
+        type: string
+      style: simple
+    limitUi:
+      description: Number of items to return at a time
+      example: 10
+      explode: true
+      in: query
+      name: limit
+      required: false
+      schema:
+        minimum: 0
+        type: integer
+      style: form
+    objFilterParams:
+      allowReserved: true
+      description: oData query to filter bucket by Key.
+      example: id eq "abc"
+      explode: true
+      in: query
+      name: filter
+      required: false
+      schema:
+        type: string
+      style: form
+    objPolicyId:
+      description: ID unique to every access-policy created in objectstore
+      example: policy1
+      explode: false
+      in: path
+      name: policyId
+      required: true
+      schema:
+        type: string
+      style: simple
+    objSystemId:
+      description: ID unique to every object service device
+      example: 8UW0002928
+      explode: false
+      in: path
+      name: systemId
+      required: true
+      schema:
+        type: string
+      style: simple
+    objectUserId:
+      description: ID unique to every user created in objectstore
+      example: testUser
+      explode: false
+      in: path
+      name: userId
+      required: true
+      schema:
+        type: string
+      style: simple
+    offsetUi:
+      description: The offset of the first item in the collection to return
+      example: 5
+      explode: true
+      in: query
+      name: offset
+      required: false
+      schema:
+        minimum: 0
+        type: integer
+      style: form
+    range:
+      allowReserved: true
+      description: range will define start and end time in which query has to be made.
+      example: startTime eq 1605063600 and endTime eq 1605186000
+      explode: true
+      in: query
+      name: range
+      required: false
+      schema:
+        type: string
+      style: form
+    selectUi:
+      allowReserved: true
+      description: "Query to select only the required parameters, separated by . if\
+        \ nested"
+      example: uid
+      explode: true
+      in: query
+      name: select
+      required: false
+      schema:
+        type: string
+      style: form
+    timeIntervalInMinParam:
+      description: It defines granularity in minutes.
+      explode: true
+      in: query
+      name: timeIntervalMin
+      required: false
+      schema:
+        enum:
+        - 5
+        - 60
+        - 1440
+        type: integer
+      style: form
+  schemas:
+    AccessPolicies:
+      description: Response Body for device-type7 access policies
+      example:
+        pageLimit: 1
+        total: 5
+        pageOffset: 1
+        items:
+        - generation: 0
+          name: testPolicy
+          statement:
+          - condition:
+              key: null
+            resource:
+            - resource
+            - resource
+            effect: effect
+            action:
+            - action
+            - action
+            sid: bucket-policy1:readonly
+          - condition:
+              key: null
+            resource:
+            - resource
+            - resource
+            effect: effect
+            action:
+            - action
+            - action
+            sid: bucket-policy1:readonly
+          tenantId: ad5f41652a53497e88
+          id: "123456"
+          systemUid: 2FF70002AC0263D0
+          version: 2012-10-17
+        - generation: 0
+          name: testPolicy
+          statement:
+          - condition:
+              key: null
+            resource:
+            - resource
+            - resource
+            effect: effect
+            action:
+            - action
+            - action
+            sid: bucket-policy1:readonly
+          - condition:
+              key: null
+            resource:
+            - resource
+            - resource
+            effect: effect
+            action:
+            - action
+            - action
+            sid: bucket-policy1:readonly
+          tenantId: ad5f41652a53497e88
+          id: "123456"
+          systemUid: 2FF70002AC0263D0
+          version: 2012-10-17
+      nullable: true
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AccessPolicy'
+          nullable: true
+          type: array
+        pageLimit:
+          example: 1
+          format: int64
+          nullable: true
+          type: integer
+        pageOffset:
+          example: 1
+          format: int64
+          nullable: true
+          type: integer
+        total:
+          example: 5
+          format: int64
+          nullable: true
+          type: integer
+      type: object
+    AccessPolicy:
+      description: Response body for device-type7 access policy
+      example:
+        generation: 0
+        name: testPolicy
+        statement:
+        - condition:
+            key: null
+          resource:
+          - resource
+          - resource
+          effect: effect
+          action:
+          - action
+          - action
+          sid: bucket-policy1:readonly
+        - condition:
+            key: null
+          resource:
+          - resource
+          - resource
+          effect: effect
+          action:
+          - action
+          - action
+          sid: bucket-policy1:readonly
+        tenantId: ad5f41652a53497e88
+        id: "123456"
+        systemUid: 2FF70002AC0263D0
+        version: 2012-10-17
+      properties:
+        generation:
+          format: Uint64
+          type: integer
+        id:
+          description: policy ID
+          example: "123456"
+          type: string
+        name:
+          description: Name of the policy
+          example: testPolicy
+          type: string
+        statement:
+          items:
+            $ref: '#/components/schemas/PolicyStatement'
+          type: array
+        systemUid:
+          description: Cluster ID
+          example: 2FF70002AC0263D0
+          type: string
+        tenantId:
+          example: ad5f41652a53497e88
+          type: string
+        version:
+          description: Version of the policy
+          example: 2012-10-17
+          type: string
+      type: object
+    ApplyPolicy:
+      description: Apply Policy body
+      example:
+        name: NewAccessPolicy1
+        policies:
+        - policies
+        - policies
+        type: USER
+      properties:
+        name:
+          description: Name of the user or group
+          example: NewAccessPolicy1
+          type: string
+        policies:
+          description: list of policies to apply
+          items:
+            type: string
+          type: array
+        type:
+          description: user or group
+          enum:
+          - USER
+          - GROUP
+          type: string
+      required:
+      - name
+      - policies
+      - type
+      type: object
+    BucketCapacityHistory:
+      description: bucket capacity trends for given granularity and time range
+      example:
+        startTime: 1625556314
+        endTime: 162564271
+        requestUri: /v1/object/device-type5/SGH014XGSP/buckets/a7c4e6593f51d0b98f0e40d7e6df04fd/capacity-history
+        capacityData:
+          systemId: HF2B93C1UG
+          total: 1
+          customerId: fc5f41652a53497e88cdcebc715cc1cf
+          bucketId: bucket1
+          items:
+          - usageMiB: 46
+            timestampMs: 1605063600
+          - usageMiB: 46
+            timestampMs: 1605063600
+      nullable: true
+      properties:
+        capacityData:
+          $ref: '#/components/schemas/BucketsCapacityHistoricalMetricData'
+        endTime:
+          description: end time of history data
+          example: 162564271
+          nullable: true
+          type: integer
+        requestUri:
+          description: requestUri for detailed storage object7
+          example: /v1/object/device-type5/SGH014XGSP/buckets/a7c4e6593f51d0b98f0e40d7e6df04fd/capacity-history
+          nullable: true
+          type: string
+        startTime:
+          description: start time of history data
+          example: 1625556314
+          nullable: true
+          type: integer
+      type: object
+    BucketTags:
+      description: Tags for the bucket
+      items:
+        $ref: '#/components/schemas/BucketTags_inner'
+      nullable: true
+      type: array
+    Buckets:
+      description: response body for get buckets call
+      example:
+        generation: 0
+        createdAt: createdAt
+        quotaType: None
+        versioning: Disabled
+        bucketPolicy: "{\"sid\":\"test-bucket1:readwrite\",\"resource\":[\"arn:aws:s3:::*\"\
+          ],\"action\":[\"s3:*\"],\"effect\":\"Allow\",\"principal\":{\"aws\":[\"\
+          test_name1\"]}}"
+        name: myBucketName
+        tenantId: tenantId
+        id: id1
+        quotaLimitMB: 1
+        compression: false
+        systemUid: system1
+        tags:
+        - value: us
+          key: location
+        - value: us
+          key: location
+      properties:
+        bucketPolicy:
+          example: "{\"sid\":\"test-bucket1:readwrite\",\"resource\":[\"arn:aws:s3:::*\"\
+            ],\"action\":[\"s3:*\"],\"effect\":\"Allow\",\"principal\":{\"aws\":[\"\
+            test_name1\"]}}"
+          type: string
+        compression:
+          description: Field to check if compression is  enabled or disabled
+          example: false
+          type: boolean
+        createdAt:
+          type: string
+        generation:
+          format: Uint64
+          type: integer
+        id:
+          description: id of the bucket
+          example: id1
+          type: string
+        name:
+          description: Name of the bucket
+          example: myBucketName
+          type: string
+        quotaLimitMB:
+          description: Field to check the quotaLimit set in MB
+          example: 1
+          format: Uint64
+          minimum: 0
+          type: integer
+        quotaType:
+          description: Field to check the quotaType set on the bucket
+          example: None
+          type: string
+        systemUid:
+          description: systemUid where the bucket is created
+          example: system1
+          type: string
+        tags:
+          description: Tags for the bucket
+          items:
+            $ref: '#/components/schemas/BucketTags_inner'
+          nullable: true
+          type: array
+        tenantId:
+          description: tenantId of the customer
+          example: tenantId
+          type: string
+        versioning:
+          description: Field to check if versioning is enabled or disabled
+          example: Disabled
+          type: string
+      type: object
+    BucketsCapacityHistoricalMetricData:
+      description: Timeseries data for particular metric type
+      example:
+        systemId: HF2B93C1UG
+        total: 1
+        customerId: fc5f41652a53497e88cdcebc715cc1cf
+        bucketId: bucket1
+        items:
+        - usageMiB: 46
+          timestampMs: 1605063600
+        - usageMiB: 46
+          timestampMs: 1605063600
+      nullable: true
+      properties:
+        bucketId:
+          description: bucketId
+          example: bucket1
+          nullable: true
+          type: string
+        customerId:
+          description: customerId
+          example: fc5f41652a53497e88cdcebc715cc1cf
+          nullable: true
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/BucketsCapacityMetricSeriesData'
+          nullable: true
+          type: array
+        systemId:
+          description: systemId
+          example: HF2B93C1UG
+          nullable: true
+          type: string
+        total:
+          description: count of series data
+          example: 1
+          nullable: true
+          type: integer
+      type: object
+    BucketsCapacityMetricSeriesData:
+      example:
+        usageMiB: 46
+        timestampMs: 1605063600
+      nullable: true
+      properties:
+        timestampMs:
+          description: epoch timestamp
+          example: 1605063600
+          format: int64
+          nullable: true
+          type: integer
+        usageMiB:
+          description: average logical usage value at particular timestamp
+          example: 46
+          format: float64
+          nullable: true
+          type: number
+      type: object
+    BucketsList:
+      example:
+        pageLimit: 1
+        total: 1
+        pageOffset: 1
+        items:
+        - generation: 0
+          createdAt: createdAt
+          quotaType: None
+          versioning: Disabled
+          bucketPolicy: "{\"sid\":\"test-bucket1:readwrite\",\"resource\":[\"arn:aws:s3:::*\"\
+            ],\"action\":[\"s3:*\"],\"effect\":\"Allow\",\"principal\":{\"aws\":[\"\
+            test_name1\"]}}"
+          name: myBucketName
+          tenantId: tenantId
+          id: id1
+          quotaLimitMB: 1
+          compression: false
+          systemUid: system1
+          tags:
+          - value: us
+            key: location
+          - value: us
+            key: location
+        - generation: 0
+          createdAt: createdAt
+          quotaType: None
+          versioning: Disabled
+          bucketPolicy: "{\"sid\":\"test-bucket1:readwrite\",\"resource\":[\"arn:aws:s3:::*\"\
+            ],\"action\":[\"s3:*\"],\"effect\":\"Allow\",\"principal\":{\"aws\":[\"\
+            test_name1\"]}}"
+          name: myBucketName
+          tenantId: tenantId
+          id: id1
+          quotaLimitMB: 1
+          compression: false
+          systemUid: system1
+          tags:
+          - value: us
+            key: location
+          - value: us
+            key: location
+      nullable: true
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Buckets'
+          nullable: true
+          type: array
+        pageLimit:
+          description: page limit
+          example: 1
+          nullable: true
+          type: integer
+        pageOffset:
+          description: page offset
+          example: 1
+          nullable: true
+          type: integer
+        total:
+          description: Number of recommendation lists
+          example: 1
+          nullable: true
+          type: integer
+      type: object
+    CreateAccessPolicyBody:
+      description: Access Policy create request body
+      example:
+        name: NewAccessPolicy1
+        statement:
+        - condition:
+            key: null
+          resource:
+          - PolicyStatementInput_resource
+          - PolicyStatementInput_resource
+          effect: ALLOW
+          action:
+          - action
+          - action
+          sid: sid
+        - condition:
+            key: null
+          resource:
+          - PolicyStatementInput_resource
+          - PolicyStatementInput_resource
+          effect: ALLOW
+          action:
+          - action
+          - action
+          sid: sid
+        version: 2012-10-17
+      properties:
+        name:
+          description: Name of the Access Policy to be created
+          example: NewAccessPolicy1
+          type: string
+        statement:
+          items:
+            $ref: '#/components/schemas/PolicyStatementInput'
+          type: array
+        version:
+          description: access policy version
+          example: 2012-10-17
+          type: string
+      required:
+      - name
+      - statement
+      - version
+      type: object
+    CreateBucketBody:
+      description: Bucket creation request body
+      example:
+        name: myBucketName
+        compression: DISABLED
+        tags:
+        - value: us
+          key: location
+        - value: us
+          key: location
+      properties:
+        compression:
+          description: Field to enable or disable compression for the bucket
+          enum:
+          - ENABLED
+          - DISABLED
+          example: DISABLED
+          type: string
+        name:
+          description: Name of the bucket to be created
+          example: myBucketName
+          type: string
+        tags:
+          description: Tags for the bucket
+          items:
+            $ref: '#/components/schemas/BucketTags_inner'
+          nullable: true
+          type: array
+      required:
+      - name
+      type: object
+    EditBucketBody:
+      description: Edit bucket request body
+      example:
+        compression: DISABLED
+        tags:
+        - value: us
+          key: location
+        - value: us
+          key: location
+      properties:
+        compression:
+          description: Field to enable or disable compression for the bucket
+          enum:
+          - ENABLED
+          - DISABLED
+          example: DISABLED
+          type: string
+        tags:
+          description: Tags for the bucket
+          items:
+            $ref: '#/components/schemas/BucketTags_inner'
+          nullable: true
+          type: array
+      type: object
+    GetGroupDetails:
+      description: Response Body for device-type7 groups
+      example:
+        pageLimit: 1
+        total: 5
+        pageOffset: 1
+        items:
+        - generation: 0
+          members:
+          - members
+          - members
+          name: NewGroup1
+          tenantId: fc5f41652a53497e88cdcebc715cc1cf
+          id: MINIO162_Group
+          systemUid: MINIO162
+          policy: policy
+          status: enabled
+        - generation: 0
+          members:
+          - members
+          - members
+          name: NewGroup1
+          tenantId: fc5f41652a53497e88cdcebc715cc1cf
+          id: MINIO162_Group
+          systemUid: MINIO162
+          policy: policy
+          status: enabled
+      nullable: true
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/GroupItem'
+          nullable: true
+          type: array
+        pageLimit:
+          example: 1
+          format: int64
+          nullable: true
+          type: integer
+        pageOffset:
+          example: 1
+          format: int64
+          nullable: true
+          type: integer
+        total:
+          example: 5
+          format: int64
+          nullable: true
+          type: integer
+      type: object
+    GroupItem:
+      example:
+        generation: 0
+        members:
+        - members
+        - members
+        name: NewGroup1
+        tenantId: fc5f41652a53497e88cdcebc715cc1cf
+        id: MINIO162_Group
+        systemUid: MINIO162
+        policy: policy
+        status: enabled
+      properties:
+        generation:
+          format: Uint64
+          type: integer
+        id:
+          example: MINIO162_Group
+          type: string
+        members:
+          items:
+            type: string
+          type: array
+        name:
+          example: NewGroup1
+          type: string
+        policy:
+          type: string
+        status:
+          example: enabled
+          type: string
+        systemUid:
+          example: MINIO162
+          type: string
+        tenantId:
+          example: fc5f41652a53497e88cdcebc715cc1cf
+          type: string
+    HomeUsersList:
+      example:
+        pageLimit: 1
+        total: 1
+        pageOffset: 1
+        items:
+        - generation: 0
+          policyName: policyName
+          name: NewUser1
+          tenantId: tenantId
+          id: id
+          memberOf:
+          - memberOf
+          - memberOf
+          systemUid: systemUid
+        - generation: 0
+          policyName: policyName
+          name: NewUser1
+          tenantId: tenantId
+          id: id
+          memberOf:
+          - memberOf
+          - memberOf
+          systemUid: systemUid
+      nullable: true
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/UserListDetails'
+          nullable: true
+          type: array
+        pageLimit:
+          description: page limit
+          example: 1
+          nullable: true
+          type: integer
+        pageOffset:
+          description: page offset
+          example: 1
+          nullable: true
+          type: integer
+        total:
+          description: Number of users lists
+          example: 1
+          nullable: true
+          type: integer
+      type: object
+    ObjectCreateGroupBody:
+      description: Group creation request body
+      example:
+        name: NewGroup1
+        users:
+        - users
+        - users
+      properties:
+        name:
+          description: Name of the group to be created
+          example: NewGroup1
+          type: string
+        users:
+          description: Users name list to add in the group
+          items:
+            type: string
+          type: array
+      required:
+      - name
+      type: object
+    ObjectUpdateGroupBody:
+      description: Group update request body
+      example:
+        users:
+        - users
+        - users
+      properties:
+        users:
+          description: Users name list to add in the group
+          items:
+            type: string
+          type: array
+      type: object
+    PolicyCondition:
+      additionalProperties:
+        $ref: '#/components/schemas/PolicyCondition_value'
+      description: device-type7 access policy statement conditions schema for create/update
+        input
+      type: object
+    PolicyStatement:
+      description: device-type7 access policy statement
+      example:
+        condition:
+          key: null
+        resource:
+        - resource
+        - resource
+        effect: effect
+        action:
+        - action
+        - action
+        sid: bucket-policy1:readonly
+      properties:
+        action:
+          items:
+            type: string
+          type: array
+        condition:
+          additionalProperties:
+            $ref: '#/components/schemas/PolicyCondition'
+          nullable: true
+          type: object
+        effect:
+          type: string
+        resource:
+          items:
+            type: string
+          nullable: true
+          type: array
+        sid:
+          example: bucket-policy1:readonly
+          nullable: true
+          type: string
+      type: object
+    PolicyStatementInput:
+      description: device-type7 access policy statements schema for create/update
+        input
+      example:
+        condition:
+          key: null
+        resource:
+        - PolicyStatementInput_resource
+        - PolicyStatementInput_resource
+        effect: ALLOW
+        action:
+        - action
+        - action
+        sid: sid
+      properties:
+        action:
+          items:
+            type: string
+          type: array
+        condition:
+          additionalProperties:
+            $ref: '#/components/schemas/PolicyCondition'
+          type: object
+        effect:
+          enum:
+          - ALLOW
+          - DENY
+          example: ALLOW
+          type: string
+        resource:
+          $ref: '#/components/schemas/PolicyStatementInput_resource'
+        sid:
+          type: string
+      required:
+      - action
+      - effect
+      - resource
+      type: object
+    UpdateAccessPolicyBody:
+      description: Access Policy update request body
+      example:
+        statement:
+        - condition:
+            key: null
+          resource:
+          - PolicyStatementInput_resource
+          - PolicyStatementInput_resource
+          effect: ALLOW
+          action:
+          - action
+          - action
+          sid: sid
+        - condition:
+            key: null
+          resource:
+          - PolicyStatementInput_resource
+          - PolicyStatementInput_resource
+          effect: ALLOW
+          action:
+          - action
+          - action
+          sid: sid
+        version: 2012-10-17
+      properties:
+        statement:
+          items:
+            $ref: '#/components/schemas/PolicyStatementInput'
+          type: array
+        version:
+          description: access policy version
+          example: 2012-10-17
+          type: string
+      required:
+      - statement
+      - version
+      type: object
+    UserDetails:
+      example:
+        name: name
+      properties:
+        name:
+          type: string
+      required:
+      - name
+      type: object
+    UserDetailsEdit:
+      example:
+        resetPassword: true
+      properties:
+        resetPassword:
+          type: boolean
+      required:
+      - resetPassword
+      type: object
+    UserListDetails:
+      example:
+        generation: 0
+        policyName: policyName
+        name: NewUser1
+        tenantId: tenantId
+        id: id
+        memberOf:
+        - memberOf
+        - memberOf
+        systemUid: systemUid
+      properties:
+        generation:
+          format: Uint64
+          nullable: true
+          type: integer
+        id:
+          type: string
+        memberOf:
+          items:
+            type: string
+          nullable: true
+          type: array
+        name:
+          example: NewUser1
+          type: string
+        policyName:
+          type: string
+        systemUid:
+          type: string
+        tenantId:
+          type: string
+    UserResponseDetails:
+      example:
+        secretKey: secretKey
+      properties:
+        secretKey:
+          type: string
+      type: object
+    internalErrorResponseUi:
+      description: "Standardized model for the error response from the server, returned\
+        \ for any internal / unexpected errors"
+      example:
+        errorCode: errorCode
+        error: error
+      properties:
+        error:
+          description: Description of the error
+          type: string
+        errorCode:
+          description: Internal error code
+          type: string
+      type: object
+    taskResponseUi:
+      example:
+        taskUri: /rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c
+        message: Successfully submitted
+        status: SUBMITTED
+      properties:
+        message:
+          description: Task Message task message.
+          example: Successfully submitted
+          type: string
+        status:
+          description: Task Status Status of the task.
+          example: SUBMITTED
+          type: string
+        taskUri:
+          description: Task URI which can be used to monitor the status of the operation.
+          example: /rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c
+          type: string
+      required:
+      - taskUri
+      type: object
+    BucketTags_inner:
+      example:
+        value: us
+        key: location
+      properties:
+        key:
+          description: Key of the Tag
+          example: location
+          maxLength: 128
+          type: string
+        value:
+          default: ""
+          description: Value for that Key
+          example: us
+          maxLength: 256
+          type: string
+      required:
+      - key
+    PolicyCondition_value:
+      oneOf:
+      - type: string
+      - items:
+          type: string
+        type: array
+    PolicyStatementInput_resource:
+      oneOf:
+      - items:
+          type: string
+        type: array
+      - type: string

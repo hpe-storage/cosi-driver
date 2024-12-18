@@ -1,0 +1,15 @@
+# © Copyright 2024 Hewlett Packard Enterprise Development LP
+---
+kind: BucketClass
+apiVersion: objectstorage.k8s.io/v1alpha1
+metadata:
+  name: bc1
+driverName: cosi.hpe.com
+deletionPolicy: Delete
+parameters:
+  cosiUserSecretName: cosi-user-secret-1
+  cosiUserSecretNamespace: default
+  bucketTags:
+    key1=value1,
+    key2=,
+    key3=value3,

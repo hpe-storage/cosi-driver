@@ -1,0 +1,664 @@
+openapi: 3.0.3
+info:
+  contact:
+    email: sc-eng-tasks-ms@hpe.com
+    name: Tasks API Support
+  description: APIs to get information about the tasks
+  title: Tasks REST APIs
+  version: 0.1.0
+servers:
+- url: /
+tags:
+- description: Tasks API
+  name: tasks
+paths:
+  /api/v1/tasks:
+    get:
+      description: |
+        Returns a list of tasks that are visible to the user. The response can
+        be paged by using the limit and offset query parameters and filtered and
+        sorted by using the filter and sort query parameters.
+      operationId: ListTasks
+      parameters:
+      - description: |
+          The offset query parameter should be used in conjunction with limit
+          for paging, e.g.: offset=30&&limit=10. The offset is the number of
+          items from the beginning of the result set to the first item
+          included in the response.
+        example: 30
+        explode: true
+        in: query
+        name: offset
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: |
+          The limit query parameter should be used in conjunction with offset
+          for paging, e.g.: offset=30&&limit=10. The limit is the maximum
+          number of items to include in the response.
+        example: 10
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+        style: form
+      - description: The expression to filter responses.
+        example: owner.name eq fred@example.com
+        explode: true
+        in: query
+        name: filter
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: "A comma separated list of properties to sort by, followed by\
+          \ a direction \nindicator (\"asc\" or \"desc\"). If no direction indicator\
+          \ is specified the \ndefault order is ascending.\n"
+        example: "id desc,name asc"
+        explode: true
+        in: query
+        name: sort
+        required: false
+        schema:
+          type: string
+        style: form
+      - description: A list of properties in the items collection to include in the
+          response.
+        example: "id,name"
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskList'
+          description: Tasks list
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksBadRequest'
+          description: An invalid request was received.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksUnauthenticated'
+          description: The request did not provide valid authentication.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksForbidden'
+          description: The requesting user was not permitted to access this resource.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksInternalServerError'
+          description: An internal error occurred.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksServiceUnavailable'
+          description: Service unavailable.
+      summary: Returns a list of tasks accessible by the user
+      tags:
+      - tasks
+  /api/v1/tasks/{id}:
+    get:
+      description: Returns the task with the given id.
+      operationId: GetTask
+      parameters:
+      - description: The UUID of the object
+        example: c1a0eb78-41a0-4151-93b2-f057ffeca3f3
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - description: A list of properties to include in the response.
+        example: "id,name"
+        explode: true
+        in: query
+        name: select
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: Single Task
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksBadRequest'
+          description: An invalid request was received.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksUnauthenticated'
+          description: The request did not provide valid authentication.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksForbidden'
+          description: The requesting user was not permitted to access this resource.
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksNotFound'
+          description: A task with the provided ID was not found.
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksInternalServerError'
+          description: An internal error occurred.
+        "503":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksServiceUnavailable'
+          description: Service unavailable.
+      summary: Returns details of a specific task
+      tags:
+      - tasks
+components:
+  schemas:
+    CommonResourceProperties:
+      description: Common properties included in all resource models.
+      properties:
+        customerId:
+          description: The customer application identifier
+          readOnly: true
+          type: string
+        generation:
+          description: A monotonically increasing value. This value updates when the
+            resource is updated and can be used as a short way to determine if a resource
+            has changed or which of two different copies of a resource is more up
+            to date.
+          format: int64
+          readOnly: true
+          type: integer
+        id:
+          description: "An identifier for the resource, usually a UUID."
+          readOnly: true
+          type: string
+        name:
+          description: A system specified name for the resource.
+          type: string
+        resourceUri:
+          description: The 'self' reference for this resource.
+          readOnly: true
+          type: string
+        type:
+          description: The type of resource.
+          readOnly: true
+          type: string
+      type: object
+    ErrorResponse:
+      properties:
+        error:
+          description: A user friendly error message
+          example: An example error message.
+          type: string
+        errorCode:
+          description: A machine-friendly identifier for the error response
+          type: string
+        traceId:
+          description: A unique identifier for the request
+          example: f57dcca3345820eb579c9317ce36dd92
+          type: string
+      required:
+      - error
+      - errorCode
+      - traceId
+    GroupIDNamePair:
+      example:
+        name: name
+        id: id
+      properties:
+        id:
+          description: ID of the associated group
+          type: string
+        name:
+          description: Name of the associated group
+          type: string
+      required:
+      - id
+      - name
+    ResourceReference:
+      description: "References to other resources include the name, type and URI of\
+        \ the other resource."
+      example:
+        name: name
+        resourceUri: resourceUri
+        type: type
+      properties:
+        name:
+          readOnly: true
+          type: string
+        resourceUri:
+          readOnly: true
+          type: string
+        type:
+          readOnly: true
+          type: string
+      required:
+      - resourceUri
+      - type
+      type: object
+    ResourceReferenceWithId:
+      allOf:
+      - $ref: '#/components/schemas/ResourceReference'
+      - properties:
+          id:
+            readOnly: true
+            type: string
+        type: object
+      description: "References to other resources include the name, type, URI and\
+        \ Id of the other resource."
+    Task:
+      allOf:
+      - $ref: '#/components/schemas/CommonResourceProperties'
+      - $ref: '#/components/schemas/TaskProperties'
+      description: |
+        The task resource provides information about progress of asynchronous
+        request processing and is where associated resources can be found.
+      example:
+        displayName: displayName
+        startedAt: 2000-01-23T04:56:07.000+00:00
+        rootTask: ""
+        estimatedRunningDurationMinutes: 6
+        type: type
+        error: ""
+        recommendations:
+        - message: message
+        - message: message
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        customerId: customerId
+        progressPercent: 14
+        id: id
+        logMessages:
+        - timestampAt: 2000-01-23T04:56:07.000+00:00
+          message: message
+        - timestampAt: 2000-01-23T04:56:07.000+00:00
+          message: message
+        state: state
+        subtreeTaskCount: 0
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+        generation: 0
+        parentTask: ""
+        groups:
+        - name: name
+          id: id
+        - name: name
+          id: id
+        resourceUri: resourceUri
+        services:
+        - services
+        - services
+        additionalDetails: ""
+        suggestedPollingIntervalSeconds: 5
+        userId: userId
+        sourceResource: ""
+        childTasks:
+        - name: name
+          resourceUri: resourceUri
+          type: type
+        - name: name
+          resourceUri: resourceUri
+          type: type
+        healthStatus: healthStatus
+        endedAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        associatedResources:
+        - name: name
+          resourceUri: resourceUri
+          type: type
+        - name: name
+          resourceUri: resourceUri
+          type: type
+    TaskConsoleReference:
+      description: References to other UI link include the consoleUri
+      properties:
+        consoleUri:
+          type: string
+      required:
+      - consoleUri
+      type: object
+    TaskList:
+      example:
+        pageLimit: 2
+        total: 9
+        pageOffset: 7
+        items:
+        - displayName: displayName
+          startedAt: 2000-01-23T04:56:07.000+00:00
+          rootTask: ""
+          estimatedRunningDurationMinutes: 6
+          type: type
+          error: ""
+          recommendations:
+          - message: message
+          - message: message
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          customerId: customerId
+          progressPercent: 14
+          id: id
+          logMessages:
+          - timestampAt: 2000-01-23T04:56:07.000+00:00
+            message: message
+          - timestampAt: 2000-01-23T04:56:07.000+00:00
+            message: message
+          state: state
+          subtreeTaskCount: 0
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+          generation: 0
+          parentTask: ""
+          groups:
+          - name: name
+            id: id
+          - name: name
+            id: id
+          resourceUri: resourceUri
+          services:
+          - services
+          - services
+          additionalDetails: ""
+          suggestedPollingIntervalSeconds: 5
+          userId: userId
+          sourceResource: ""
+          childTasks:
+          - name: name
+            resourceUri: resourceUri
+            type: type
+          - name: name
+            resourceUri: resourceUri
+            type: type
+          healthStatus: healthStatus
+          endedAt: 2000-01-23T04:56:07.000+00:00
+          name: name
+          associatedResources:
+          - name: name
+            resourceUri: resourceUri
+            type: type
+          - name: name
+            resourceUri: resourceUri
+            type: type
+        - displayName: displayName
+          startedAt: 2000-01-23T04:56:07.000+00:00
+          rootTask: ""
+          estimatedRunningDurationMinutes: 6
+          type: type
+          error: ""
+          recommendations:
+          - message: message
+          - message: message
+          createdAt: 2000-01-23T04:56:07.000+00:00
+          customerId: customerId
+          progressPercent: 14
+          id: id
+          logMessages:
+          - timestampAt: 2000-01-23T04:56:07.000+00:00
+            message: message
+          - timestampAt: 2000-01-23T04:56:07.000+00:00
+            message: message
+          state: state
+          subtreeTaskCount: 0
+          updatedAt: 2000-01-23T04:56:07.000+00:00
+          generation: 0
+          parentTask: ""
+          groups:
+          - name: name
+            id: id
+          - name: name
+            id: id
+          resourceUri: resourceUri
+          services:
+          - services
+          - services
+          additionalDetails: ""
+          suggestedPollingIntervalSeconds: 5
+          userId: userId
+          sourceResource: ""
+          childTasks:
+          - name: name
+            resourceUri: resourceUri
+            type: type
+          - name: name
+            resourceUri: resourceUri
+            type: type
+          healthStatus: healthStatus
+          endedAt: 2000-01-23T04:56:07.000+00:00
+          name: name
+          associatedResources:
+          - name: name
+            resourceUri: resourceUri
+            type: type
+          - name: name
+            resourceUri: resourceUri
+            type: type
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Task'
+          type: array
+        pageLimit:
+          description: The limit query parameter specified in the request.
+          type: integer
+        pageOffset:
+          description: The offset query parameter specified in the request.
+          type: integer
+        total:
+          description: Total number of items matching the filter query parameter in
+            the request.
+          type: integer
+      required:
+      - items
+    TaskLogMessage:
+      example:
+        timestampAt: 2000-01-23T04:56:07.000+00:00
+        message: message
+      properties:
+        message:
+          type: string
+        timestampAt:
+          format: date-time
+          type: string
+      required:
+      - message
+      - timestampAt
+    TaskProperties:
+      properties:
+        additionalDetails:
+          allOf:
+          - $ref: '#/components/schemas/TaskConsoleReference'
+          description: "A link to be displayed in the Tasks UI. This can be used when\
+            \ a task is paused to take the user to the console UI page with information\
+            \ on how to unpause the task, or for more general information when the\
+            \ task is in other states."
+        associatedResources:
+          description: Resources that are associated with the task. These may be created
+            by the task or other resources that are involved in the task.
+          items:
+            $ref: '#/components/schemas/ResourceReference'
+          type: array
+        childTasks:
+          description: A list of sub-tasks that were initiated by this task.
+          items:
+            $ref: '#/components/schemas/ResourceReference'
+          type: array
+        createdAt:
+          description: The time this task was created.
+          format: date-time
+          type: string
+        displayName:
+          description: The displayed name for the task.
+          type: string
+        endedAt:
+          description: The time this task completed.
+          format: date-time
+          nullable: true
+          type: string
+        error:
+          allOf:
+          - $ref: '#/components/schemas/ErrorResponse'
+          description: The error response status of the operation.
+          nullable: true
+        estimatedRunningDurationMinutes:
+          description: An estimate of how long the task will run before completing.
+          type: integer
+        groups:
+          description: A list of groups associated with this task.
+          items:
+            $ref: '#/components/schemas/GroupIDNamePair'
+          type: array
+        healthStatus:
+          description: "The health status indicates if any errors or problems have\
+            \ been encountered during the processing of the task. \nExpected values\
+            \ are OK, ERROR, WARNING, UNKNOWN, and UNSPECIFIED.\n"
+          type: string
+        logMessages:
+          description: Time stamped messages that record the progress of the task.
+          items:
+            $ref: '#/components/schemas/TaskLogMessage'
+          type: array
+        parentTask:
+          allOf:
+          - $ref: '#/components/schemas/ResourceReferenceWithId'
+          description: The parent is the task that initiated this sub-task. If this
+            task is not a sub-task this will be null.
+          nullable: true
+        progressPercent:
+          description: A percentage representation of progress to completion.
+          maximum: 100
+          minimum: 0
+          type: integer
+        recommendations:
+          description: Recommendations on how to fix failing tasks.
+          items:
+            $ref: '#/components/schemas/TaskRecommendations'
+          type: array
+        rootTask:
+          allOf:
+          - $ref: '#/components/schemas/ResourceReferenceWithId'
+          description: The root of the tree of tasks. If this task is not part of
+            a tree this will be null.
+          nullable: true
+        services:
+          description: "List of services this task belongs to, can be used to filter\
+            \ to specific services in the UI"
+          items:
+            type: string
+          type: array
+        sourceResource:
+          allOf:
+          - $ref: '#/components/schemas/ResourceReference'
+          description: The resource that was used to initiate the task.
+          nullable: true
+        startedAt:
+          description: The time this task was started.
+          format: date-time
+          nullable: true
+          type: string
+        state:
+          description: |
+            A message to indicate the current state of the task, for example the current step in a workflow.
+            Expected values are INITIALIZED, RUNNING, FAILED, SUCCEEDED, TIMEDOUT, PAUSED, and UNSPECIFIED.
+          type: string
+        subtreeTaskCount:
+          description: "The count of the number of child Tasks below this one, recursively."
+          minimum: 0
+          type: integer
+        suggestedPollingIntervalSeconds:
+          description: This attribute suggests a suitable interval to use when polling
+            for progress. Where specified this will be based on the frequency with
+            which the task is likely to be updated.
+          type: integer
+        updatedAt:
+          description: The time this task was last updated.
+          format: date-time
+          nullable: true
+          type: string
+        userId:
+          description: The ID or email address of the user that initiated the task.
+          type: string
+    TaskRecommendations:
+      example:
+        message: message
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    TasksBadRequest:
+      allOf:
+      - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        errorCode: ""
+      properties:
+        errorCode:
+          description: "Possible values: BAD_REQUEST, INVALID_PARAMETER"
+    TasksForbidden:
+      allOf:
+      - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        errorCode: ""
+      properties:
+        errorCode:
+          description: "Possible values: FORBIDDEN"
+    TasksInternalServerError:
+      allOf:
+      - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        errorCode: ""
+      properties:
+        errorCode:
+          description: "Possible values: INTERNAL_ERROR"
+    TasksNotFound:
+      allOf:
+      - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        errorCode: ""
+      properties:
+        errorCode:
+          description: "Possible values: NOT_FOUND"
+    TasksServiceUnavailable:
+      allOf:
+      - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        errorCode: ""
+      properties:
+        errorCode:
+          description: "Possible values: SERVICE_UNAVAILABLE"
+    TasksUnauthenticated:
+      allOf:
+      - $ref: '#/components/schemas/ErrorResponse'
+      example:
+        errorCode: ""
+      properties:
+        errorCode:
+          description: "Possible values: UNAUTHENTICATED"

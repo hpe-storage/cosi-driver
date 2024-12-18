@@ -1,0 +1,28 @@
+# © Copyright 2024 Hewlett Packard Enterprise Development LP
+---
+apiVersion: objectstorage.k8s.io/v1alpha1
+kind: Bucket
+metadata:
+  name: testbucket1
+spec:
+  bucketClaim: {}
+  bucketClassName: bc1
+  deletionPolicy: Delete
+  driverName: cosi.hpe.com
+  existingBucketID: testbucket1
+  parameters:
+    cosiUserSecretName: cosi-user-secret-1
+    cosiUserSecretNamespace: default
+  protocols:
+  - s3
+
+---
+apiVersion: objectstorage.k8s.io/v1alpha1
+kind: BucketClaim
+metadata:
+  name: bcl-brown-1
+spec:
+  bucketClassName: bc1
+  existingBucketName: testbucket1
+  protocols:
+  - s3

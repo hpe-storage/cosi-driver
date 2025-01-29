@@ -2,7 +2,7 @@ Hi there! We're thrilled that you'd like to contribute to this project. Your hel
 
 Contributing
 ------------
-The best way to directly collaborate with the project contributors is through GitHub: <https://github.com/hpe-storage/hpe-cosi-driver>
+The best way to directly collaborate with the project contributors is through GitHub: <https://github.com/hpe-storage/cosi-driver>
 
 Before you start to code, we recommend discussing your plans with the targeted project/repo through a GitHub issue, especially for more ambitious contributions. This gives other contributors a chance to point you in the right direction, give you feedback on your design, and help you find out if someone else is working on the same thing.
 

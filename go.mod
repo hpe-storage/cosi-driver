@@ -18,9 +18,9 @@ require (
 	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
 	k8s.io/client-go v0.30.2
-	sigs.k8s.io/container-object-storage-interface-api v0.1.0
-	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0
-	sigs.k8s.io/container-object-storage-interface-spec v0.1.0
+	sigs.k8s.io/container-object-storage-interface/client v0.0.0-00010101000000-000000000000
+	sigs.k8s.io/container-object-storage-interface/sidecar v0.0.0-00010101000000-000000000000
+	sigs.k8s.io/container-object-storage-interface/proto v0.0.0-00010101000000-000000000000
 )
 
 require (

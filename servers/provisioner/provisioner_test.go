@@ -25,10 +25,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
-	v1alpha1 "sigs.k8s.io/container-object-storage-interface-api/apis/objectstorage/v1alpha1"
-	bucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned"
-	fakebucketclientset "sigs.k8s.io/container-object-storage-interface-api/client/clientset/versioned/fake"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	v1alpha1 "sigs.k8s.io/container-object-storage-interface/client/apis/objectstorage/v1alpha1"
+	bucketclientset "sigs.k8s.io/container-object-storage-interface/client/clientset/versioned"
+	fakebucketclientset "sigs.k8s.io/container-object-storage-interface/client/clientset/versioned"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 )
 
 func TestNew(t *testing.T) {

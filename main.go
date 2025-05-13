@@ -21,7 +21,7 @@ import (
 	"github.com/go-logr/stdr"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"google.golang.org/grpc"
-	cosi "sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/provisioner"
+	cosi "sigs.k8s.io/container-object-storage-interface/sidecar/pkg/provisioner"
 )
 
 const (

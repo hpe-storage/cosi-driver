@@ -179,14 +179,12 @@ k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f h1:GA7//TjRY9yWGy1poLzYYJ
 k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f/go.mod h1:R/HEjbvWI0qdfb8viZUeVZm0X6IZnxAydC7YU42CMw4=
 k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 h1:M3sRQVHv7vB20Xc2ybTt7ODCeFj6JSWYFzOFnYeS6Ro=
 k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
-sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0 h1:S5Qh/VAd745a2vMyZfK6qLiWJxvGpbUOddBtEVX1nU4=
-sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0/go.mod h1:JhfV605PePyAvL4F8wTjJ9ZiSAaGkrMmpn0liMPftJ4=
-sigs.k8s.io/container-object-storage-interface-spec v0.0.0-20220811182913-3c421cfc2830 h1:o8/7mIJCflt33epl4TZNS/+M5MktS8fQvcNuN8p235k=
-sigs.k8s.io/container-object-storage-interface-spec v0.0.0-20220811182913-3c421cfc2830/go.mod h1:SzF/yVSh88TgYdBOAXqhT96XjU8pCQtoeQKxzIOOmWQ=
 sigs.k8s.io/container-object-storage-interface/client v0.0.0-20250507132316-945f40a53ab0 h1:y0OiFCFd6EamM2a1E+nQ6x+BpXMuEx4CnrfywLeeyTE=
 sigs.k8s.io/container-object-storage-interface/client v0.0.0-20250507132316-945f40a53ab0/go.mod h1:RQSwGVkJ9vBo02N1tTWmqHqykln8K2d/dHgdXWie2I4=
 sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250507132316-945f40a53ab0 h1:31Weo5sB7VDWpm61aQO5NmQTfQRglDfRAkxsxgt6jbc=
 sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250507132316-945f40a53ab0/go.mod h1:OT6oyZdPLqVm5ua+R+8IbIVpiCeSD39ceEhkIswGFRI=
+sigs.k8s.io/container-object-storage-interface/sidecar v0.0.0-20250128084324-897080a6563f h1:tTAuXtOTgyxrf+EM0tnRWxlwr8g9Ov0sWL7wW80SPQA=
+sigs.k8s.io/container-object-storage-interface/sidecar v0.0.0-20250128084324-897080a6563f/go.mod h1:VcrraKfVds53a+DzD+P2qeYTdDT4RmBMuL/SKHYyPuY=
 sigs.k8s.io/controller-runtime v0.18.4 h1:87+guW1zhvuPLh1PHybKdYFLU0YJp4FhJRmiHvm5BZw=
 sigs.k8s.io/controller-runtime v0.18.4/go.mod h1:TVoGrfdpbA9VRFaRnKgk9P5/atA0pMwq+f+msb9M8Sg=
 sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 h1:/Rv+M11QRah1itp8VhT6HoVx1Ray9eB4DBr+K+/sCJ8=

@@ -29,6 +29,7 @@ type Server struct {
 	log             logr.Logger
 	K8sClientset    *kubernetes.Clientset
 	BucketClientset bucketclientset.Interface
+	cosi.UnimplementedProvisionerServer
 }
 
 // Interface guards.

@@ -19,8 +19,9 @@ require (
 	k8s.io/apimachinery v0.32.3
 	k8s.io/client-go v0.32.3
 	sigs.k8s.io/container-object-storage-interface/client v0.0.0-20250507132316-945f40a53ab0
-	sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250507132316-945f40a53ab0
-
+	sigs.k8s.io/container-object-storage-interface/proto v0.0.0
+	sigs.k8s.io/container-object-storage-interface/sidecar v0.0.0-20250128084324-897080a6563f
+// sigs.k8s.io/container-object-storage-interface/sidecar/pkg/provisioner v0.0.0-20250507132316-945f40a53ab0
 )
 
 require (
@@ -60,7 +61,6 @@ require (
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 // indirect
-	sigs.k8s.io/container-object-storage-interface-spec v0.0.0-20220811182913-3c421cfc2830 // indirect
 	sigs.k8s.io/controller-runtime v0.18.4 // indirect
 	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
@@ -70,4 +70,5 @@ require (
 replace (
 	hpe-cosi-osp/alletraMPX10000_sdk => ../cosi-driver/alletraMPX10000_sdk
 	hpe-cosi-osp/glcp_tasks_sdk => ../cosi-driver/glcp_tasks_sdk
+	sigs.k8s.io/container-object-storage-interface/proto => sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250507132316-945f40a53ab0
 )

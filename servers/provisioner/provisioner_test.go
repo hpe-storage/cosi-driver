@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/rest"
 	v1alpha1 "sigs.k8s.io/container-object-storage-interface/client/apis/objectstorage/v1alpha1"
 	bucketclientset "sigs.k8s.io/container-object-storage-interface/client/clientset/versioned"
-	fakebucketclientset "sigs.k8s.io/container-object-storage-interface/client/clientset/versioned"
+	fakebucketclientset "sigs.k8s.io/container-object-storage-interface/client/clientset/versioned/fake"
 	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 )
 

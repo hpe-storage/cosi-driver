@@ -21,7 +21,6 @@ require (
 	sigs.k8s.io/container-object-storage-interface/client v0.0.0-20250507132316-945f40a53ab0
 	sigs.k8s.io/container-object-storage-interface/proto v0.0.0
 	sigs.k8s.io/container-object-storage-interface/sidecar v0.0.0-20250128084324-897080a6563f
-// sigs.k8s.io/container-object-storage-interface/sidecar/pkg/provisioner v0.0.0-20250507132316-945f40a53ab0
 )
 
 require (
@@ -68,7 +67,7 @@ require (
 )
 
 replace (
-	hpe-cosi-osp/alletraMPX10000_sdk => ../cosi-driver/alletraMPX10000_sdk
-	hpe-cosi-osp/glcp_tasks_sdk => ../cosi-driver/glcp_tasks_sdk
-	sigs.k8s.io/container-object-storage-interface/proto => sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250507132316-945f40a53ab0
+	hpe-cosi-osp/alletraMPX10000_sdk => ./alletraMPX10000_sdk
+	hpe-cosi-osp/glcp_tasks_sdk => ./glcp_tasks_sdk
+	sigs.k8s.io/container-object-storage-interface/proto v0.0.0 => sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250128084324-897080a6563f // indirect
 )

@@ -16,7 +16,7 @@ import (
 type Server struct {
 	log  logr.Logger
 	name string
-	cosi.IdentityServer
+	cosi.UnsafeIdentityServer
 }
 
 // Interface guards.

@@ -10,6 +10,7 @@ import (
 	"hpe-cosi-osp/servers/provisioner"
 	"hpe-cosi-osp/servers/provisioner/utils"
 	"io/fs"
+	"net"
 	"net/url"
 
 	stdlog "log"
@@ -21,7 +22,7 @@ import (
 	"github.com/go-logr/stdr"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"google.golang.org/grpc"
-	cosi "sigs.k8s.io/container-object-storage-interface/sidecar/pkg/provisioner"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 )
 
 const (
@@ -95,12 +96,13 @@ func main() {
 	}
 
 	// Initialize the COSI servers
-	server, err := cosi.NewCOSIProvisionerServer(driverAddress,
+	server, err := grpcServer(
 		identityServer,
 		provisionerServer,
-		grpcOptions)
+		grpcOptions,
+	)
 	if err != nil {
-		log.Error(err, "failed to initialize COSI servers")
+		log.Error(err, "gRPC Server creation failed")
 		os.Exit(1)
 	}
 
@@ -120,10 +122,35 @@ func main() {
 		}
 	}
 
-	// Register the COSI servers, start listening and serving requests on the socket
-	err = server.Run(ctx)
+	// Create a Unix listener for the gRPC server
+	lis, err := net.Listen("unix", url.Path)
 	if err != nil {
-		log.Error(err, "failed to run COSI servers")
+		log.Error(err, "failed to listen on unix socket", "path", url.Path)
 		os.Exit(1)
 	}
+
+	// Start serving requests on the socket
+	err = server.Serve(lis)
+	if err != nil {
+		log.Error(err, "failed to serve gRPC server")
+		os.Exit(1)
+	}
+
+}
+
+func grpcServer(
+	identity cosi.IdentityServer,
+	provisioner cosi.ProvisionerServer,
+	grpcOptions []grpc.ServerOption,
+) (*grpc.Server, error) {
+	server := grpc.NewServer(grpcOptions...)
+
+	if identity == nil || provisioner == nil {
+		return nil, errors.New("provisioner and identity servers cannot be nil")
+	}
+
+	cosi.RegisterIdentityServer(server, identity)
+	cosi.RegisterProvisionerServer(server, provisioner)
+
+	return server, nil
 }

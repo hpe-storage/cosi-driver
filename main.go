@@ -138,19 +138,24 @@ func main() {
 
 }
 
+// grpcServer creates a new gRPC server, registers the COSI identity and provisioner servers, and returns the server instance.
 func grpcServer(
-	identity cosi.IdentityServer,
-	provisioner cosi.ProvisionerServer,
-	grpcOptions []grpc.ServerOption,
+	identity cosi.IdentityServer, // COSI IdentityServer implementation
+	provisioner cosi.ProvisionerServer, // COSI ProvisionerServer implementation
+	grpcOptions []grpc.ServerOption, // gRPC server options (e.g., interceptors)
 ) (*grpc.Server, error) {
+	// Create a new gRPC server with the provided options
 	server := grpc.NewServer(grpcOptions...)
 
+	// Ensure both identity and provisioner servers are provided
 	if identity == nil || provisioner == nil {
 		return nil, errors.New("provisioner and identity servers cannot be nil")
 	}
 
+	// Register the COSI IdentityServer and ProvisionerServer with the gRPC server
 	cosi.RegisterIdentityServer(server, identity)
 	cosi.RegisterProvisionerServer(server, provisioner)
 
+	// Return the configured gRPC server
 	return server, nil
 }

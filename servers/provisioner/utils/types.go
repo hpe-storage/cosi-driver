@@ -36,7 +36,7 @@ type IAMCredentials struct {
 
 // BucketRequest defines the structure for bucket creation options like versioning, locking, and compression.
 type BucketRequest struct {
-	Compression     bool   `json:"Compression"`
+	Compression     string `json:"Compression,omitempty"`
 	Versioning      string `json:"Versioning,omitempty"`
 	Locking         string `json:"Locking,omitempty"`
 	RetentionMode   string `json:"RetentionMode,omitempty"`
@@ -53,7 +53,7 @@ type SpaceQuota struct {
 // CreateBucketRequest defines the structure for creating a bucket with various configurations.
 type CreateBucketRequest struct {
 	LocationConstraint string `json:"LocationConstraint"`
-	Compression        bool   `json:"Compression"`
+	Compression        string `json:"Compression,omitempty"`
 	BucketPolicy       string `json:"BucketPolicy"`
 	Versioning         string `json:"Versioning,omitempty"`
 	ObjectLockEnabled  string `json:"ObjectLockEnabled,omitempty"`

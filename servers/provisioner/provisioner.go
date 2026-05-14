@@ -89,12 +89,15 @@ func (s *Server) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateB
 		return nil, err
 	}
 
-	// --- Modular parameter parsing ---
-	versioning, err := parseVersioning(param)
+	// --- Parameter parsing (enum validation lives in utils.Feature) ---
+	versioning, err := utils.FeatureFromParams(param, "versioning")
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	compression, err := parseCompression(param)
+	if versioning == "" {
+		versioning = utils.FeatureDisabled
+	}
+	compression, err := utils.FeatureFromParams(param, "compression")
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -105,7 +108,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateB
 	tags := parseBucketTags(param)
 
 	// Enforce: object locking only allowed if versioning is enabled
-	if locking == string(utils.FeatureEnabled) && versioning != string(utils.FeatureEnabled) {
+	if locking == utils.FeatureEnabled && versioning != utils.FeatureEnabled {
 		return nil, status.Error(codes.InvalidArgument, "Object locking requires versioning to be enabled.")
 	}
 
@@ -124,8 +127,8 @@ func (s *Server) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateB
 	}
 
 	// If locking is enabled, set object lock configuration
-	if locking == string(utils.FeatureEnabled) {
-		err = s3c.SetObjectLockConfiguration(ctx, bucketName, locking, retentionMode, objectLockDays, objectLockYears)
+	if locking == utils.FeatureEnabled {
+		err = s3c.SetObjectLockConfiguration(ctx, bucketName, string(locking), retentionMode, objectLockDays, objectLockYears)
 		if err != nil {
 			s.log.Error(err, "failed to set object lock configuration")
 			return nil, utils.ToGRPCStatusError("failed to set object lock configuration", err)
@@ -312,12 +315,12 @@ func (c *S3Client) CreateBucket(ctx context.Context, bucketName string, req util
 
 	// Build the S3 JSON payload
 	payloadStruct := struct {
-		Compression     string `json:"Compression,omitempty"`
-		Versioning      string `json:"Versioning,omitempty"`
-		Locking         string `json:"Locking,omitempty"`
-		RetentionMode   string `json:"RetentionMode,omitempty"`
-		ObjectLockDays  int    `json:"ObjectLockDays,omitempty"`
-		ObjectLockYears int    `json:"ObjectLockYears,omitempty"`
+		Compression     utils.Feature `json:"Compression,omitempty"`
+		Versioning      utils.Feature `json:"Versioning,omitempty"`
+		Locking         utils.Feature `json:"Locking,omitempty"`
+		RetentionMode   string        `json:"RetentionMode,omitempty"`
+		ObjectLockDays  int           `json:"ObjectLockDays,omitempty"`
+		ObjectLockYears int           `json:"ObjectLockYears,omitempty"`
 	}{
 		Compression:     req.Compression,
 		Versioning:      req.Versioning,
@@ -489,52 +492,15 @@ func (c *S3Client) SetObjectLockConfiguration(ctx context.Context, bucketName, e
 
 // --- Modular parameter parsing helpers ---
 
-// validateEnabledDisabled ensures the value is either "Enabled" or "Disabled" (case-insensitive).
-// Returns the canonical form ("Enabled" or "Disabled") on success, or an error otherwise.
-func validateEnabledDisabled(field, value string) (string, error) {
-	switch {
-	case strings.EqualFold(value, string(utils.FeatureEnabled)):
-		return string(utils.FeatureEnabled), nil
-	case strings.EqualFold(value, string(utils.FeatureDisabled)):
-		return string(utils.FeatureDisabled), nil
-	default:
-		return "", fmt.Errorf("invalid value %q for %s: must be %q or %q",
-			value, field, string(utils.FeatureEnabled), string(utils.FeatureDisabled))
-	}
-}
-
-// parseVersioning parses the versioning parameter and returns its value.
-// Returns an error if the value is set to anything other than "Enabled" or "Disabled".
-func parseVersioning(param map[string]string) (string, error) {
-	for k, v := range param {
-		if strings.EqualFold(k, "versioning") {
-			return validateEnabledDisabled("versioning", v)
-		}
-	}
-	return string(utils.FeatureDisabled), nil
-}
-
-// parseCompression parses the compression parameter and returns its value.
-// Returns an error if the value is set to anything other than "Enabled" or "Disabled".
-func parseCompression(param map[string]string) (string, error) {
-	for k, v := range param {
-		if strings.EqualFold(k, "compression") {
-			return validateEnabledDisabled("compression", v)
-		}
-	}
-	return "", nil // not specified; omitted from payload
-}
-
 // parseObjectLock parses the object lock parameters and returns the locking configuration.
-// Returns an error if the locking value is set to anything other than "Enabled" or "Disabled".
-func parseObjectLock(param map[string]string) (locking, retentionMode string, days, years int, err error) {
+// Validation of the locking value ("Enabled"/"Disabled") is delegated to utils.FeatureFromParams.
+func parseObjectLock(param map[string]string) (locking utils.Feature, retentionMode string, days, years int, err error) {
+	locking, err = utils.FeatureFromParams(param, "locking")
+	if err != nil {
+		return "", "", 0, 0, err
+	}
 	for k, v := range param {
 		switch strings.ToLower(k) {
-		case "locking":
-			locking, err = validateEnabledDisabled("locking", v)
-			if err != nil {
-				return "", "", 0, 0, err
-			}
 		case "retentionmode":
 			retentionMode = v
 		case "defaultretentioninterval":

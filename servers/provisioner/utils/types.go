@@ -86,8 +86,8 @@ type ObjectLockDefaultRetention struct {
 }
 
 // Feature represents a feature toggle with enabled or disabled states.
-// Acts as a validated enum: only FeatureEnabled, FeatureDisabled, or the
-// zero value ("") are accepted. Any other value is rejected during JSON
+// Acts as a validated enum: only members listed in validFeatures (plus the
+// zero value "") are accepted. Any other value is rejected during JSON
 // unmarshalling or when constructed via ParseFeature.
 type Feature string
 
@@ -96,33 +96,54 @@ const (
 	FeatureDisabled Feature = "Disabled"
 )
 
+// validFeatures is the single registry of declared Feature enum members.
+// To add a new feature value, declare its constant above and append it
+// here — no other code in this file needs to change.
+var validFeatures = []Feature{
+	FeatureEnabled,
+	FeatureDisabled,
+}
+
 // IsValid reports whether f is one of the declared Feature values.
 // The zero value ("") is considered valid so that omitempty fields can be
 // left unset.
 func (f Feature) IsValid() bool {
-	switch f {
-	case "", FeatureEnabled, FeatureDisabled:
+	if f == "" {
 		return true
-	default:
-		return false
 	}
+	for _, v := range validFeatures {
+		if f == v {
+			return true
+		}
+	}
+	return false
 }
 
 // ParseFeature converts a raw string into a Feature in a case-insensitive
 // manner, returning an error if the value is not one of the declared enum
 // members. An empty input returns the zero value with no error.
+// New enum members are picked up automatically by appending to validFeatures.
 func ParseFeature(s string) (Feature, error) {
-	switch {
-	case s == "":
+	if s == "" {
 		return "", nil
-	case strings.EqualFold(s, string(FeatureEnabled)):
-		return FeatureEnabled, nil
-	case strings.EqualFold(s, string(FeatureDisabled)):
-		return FeatureDisabled, nil
-	default:
-		return "", fmt.Errorf("invalid Feature value %q: must be %q or %q",
-			s, string(FeatureEnabled), string(FeatureDisabled))
 	}
+	for _, v := range validFeatures {
+		if strings.EqualFold(s, string(v)) {
+			return v, nil
+		}
+	}
+	return "", fmt.Errorf("invalid Feature value %q: must be one of %s",
+		s, joinFeatures(validFeatures))
+}
+
+// joinFeatures renders the declared enum members for error messages,
+// e.g. `"Enabled", "Disabled"`.
+func joinFeatures(fs []Feature) string {
+	parts := make([]string, len(fs))
+	for i, v := range fs {
+		parts[i] = fmt.Sprintf("%q", string(v))
+	}
+	return strings.Join(parts, ", ")
 }
 
 // UnmarshalJSON enforces the enum constraint when decoding JSON into a

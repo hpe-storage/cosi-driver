@@ -154,3 +154,230 @@ func TestFeatureFromParams(t *testing.T) {
 		})
 	}
 }
+
+// --- RetentionMode -------------------------------------------------------
+
+func TestParseRetentionMode(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    RetentionMode
+		wantErr bool
+	}{
+		{"empty returns zero value", "", "", false},
+		{"exact GOVERNANCE", "GOVERNANCE", RetentionModeGovernance, false},
+		{"exact COMPLIANCE", "COMPLIANCE", RetentionModeCompliance, false},
+		{"case-insensitive governance", "governance", RetentionModeGovernance, false},
+		{"case-insensitive Compliance", "Compliance", RetentionModeCompliance, false},
+		{"unknown rejected", "Strict", "", true},
+		{"whitespace rejected", " GOVERNANCE", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseRetentionMode(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ParseRetentionMode(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("ParseRetentionMode(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRetentionMode_UnmarshalJSON(t *testing.T) {
+	type payload struct {
+		RetentionMode RetentionMode `json:"RetentionMode,omitempty"`
+	}
+	tests := []struct {
+		name    string
+		body    string
+		want    RetentionMode
+		wantErr bool
+	}{
+		{"valid GOVERNANCE", `{"RetentionMode":"GOVERNANCE"}`, RetentionModeGovernance, false},
+		{"valid lowercase compliance", `{"RetentionMode":"compliance"}`, RetentionModeCompliance, false},
+		{"missing field accepted", `{}`, "", false},
+		{"invalid string rejected", `{"RetentionMode":"Strict"}`, "", true},
+		{"number rejected", `{"RetentionMode":3}`, "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var p payload
+			err := json.Unmarshal([]byte(tt.body), &p)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("Unmarshal(%s) error = %v, wantErr %v", tt.body, err, tt.wantErr)
+			}
+			if !tt.wantErr && p.RetentionMode != tt.want {
+				t.Errorf("Unmarshal(%s) RetentionMode = %q, want %q", tt.body, p.RetentionMode, tt.want)
+			}
+		})
+	}
+}
+
+func TestRetentionModeFromParams(t *testing.T) {
+	tests := []struct {
+		name    string
+		param   map[string]string
+		key     string
+		want    RetentionMode
+		wantErr bool
+	}{
+		{"absent key", map[string]string{}, "retentionMode", "", false},
+		{"empty value", map[string]string{"retentionMode": ""}, "retentionMode", "", false},
+		{"valid governance", map[string]string{"retentionMode": "GOVERNANCE"}, "retentionMode", RetentionModeGovernance, false},
+		{"case-insensitive key", map[string]string{"RetentionMode": "COMPLIANCE"}, "retentionMode", RetentionModeCompliance, false},
+		{"invalid value", map[string]string{"retentionMode": "Strict"}, "retentionMode", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := RetentionModeFromParams(tt.param, tt.key)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("RetentionModeFromParams() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("RetentionModeFromParams() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+// --- RetentionInterval ---------------------------------------------------
+
+func TestParseRetentionInterval(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    RetentionInterval
+		wantErr bool
+	}{
+		{"empty returns zero", "", "", false},
+		{"30d valid", "30d", "30d", false},
+		{"2m valid", "2m", "2m", false},
+		{"1y valid", "1y", "1y", false},
+		{"large day count valid", "365d", "365d", false},
+		{"zero rejected", "0d", "", true},
+		{"leading zero rejected", "01d", "", true},
+		{"negative rejected", "-1d", "", true},
+		{"missing suffix rejected", "30", "", true},
+		{"wrong suffix rejected", "30h", "", true},
+		{"whitespace rejected", " 30d", "", true},
+		{"trailing whitespace rejected", "30d ", "", true},
+		{"uppercase suffix rejected", "30D", "", true},
+		{"empty number rejected", "d", "", true},
+		{"double suffix rejected", "30dd", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseRetentionInterval(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ParseRetentionInterval(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("ParseRetentionInterval(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRetentionInterval_UnmarshalJSON(t *testing.T) {
+	type payload struct {
+		DefaultRetentionInterval RetentionInterval `json:"defaultRetentionInterval,omitempty"`
+	}
+	tests := []struct {
+		name    string
+		body    string
+		want    RetentionInterval
+		wantErr bool
+	}{
+		{"valid 30d", `{"defaultRetentionInterval":"30d"}`, "30d", false},
+		{"valid 1y", `{"defaultRetentionInterval":"1y"}`, "1y", false},
+		{"missing field accepted", `{}`, "", false},
+		{"invalid string rejected", `{"defaultRetentionInterval":"forever"}`, "", true},
+		{"number rejected", `{"defaultRetentionInterval":30}`, "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var p payload
+			err := json.Unmarshal([]byte(tt.body), &p)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("Unmarshal(%s) error = %v, wantErr %v", tt.body, err, tt.wantErr)
+			}
+			if !tt.wantErr && p.DefaultRetentionInterval != tt.want {
+				t.Errorf("Unmarshal(%s) = %q, want %q", tt.body, p.DefaultRetentionInterval, tt.want)
+			}
+		})
+	}
+}
+
+func TestRetentionInterval_ToDaysYears(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     RetentionInterval
+		wantDays  int
+		wantYears int
+	}{
+		{"empty", "", 0, 0},
+		{"30d", "30d", 30, 0},
+		{"2m -> 60 days", "2m", 60, 0},
+		{"1m -> 30 days", "1m", 30, 0},
+		{"1y -> 1 year", "1y", 0, 1},
+		{"5y -> 5 years", "5y", 0, 5},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d, y := tt.input.ToDaysYears()
+			if d != tt.wantDays || y != tt.wantYears {
+				t.Errorf("(%q).ToDaysYears() = (%d, %d), want (%d, %d)",
+					tt.input, d, y, tt.wantDays, tt.wantYears)
+			}
+		})
+	}
+}
+
+func TestRetentionIntervalFromParams(t *testing.T) {
+	tests := []struct {
+		name    string
+		param   map[string]string
+		key     string
+		want    RetentionInterval
+		wantErr bool
+	}{
+		{"absent key", map[string]string{}, "defaultRetentionInterval", "", false},
+		{"valid 30d", map[string]string{"defaultRetentionInterval": "30d"}, "defaultRetentionInterval", "30d", false},
+		{"case-insensitive key", map[string]string{"DefaultRetentionInterval": "1y"}, "defaultRetentionInterval", "1y", false},
+		{"invalid value", map[string]string{"defaultRetentionInterval": "forever"}, "defaultRetentionInterval", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := RetentionIntervalFromParams(tt.param, tt.key)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("RetentionIntervalFromParams() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("RetentionIntervalFromParams() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestBucketRequest_RetentionMode confirms RetentionMode validation flows
+// through to the BucketRequest struct (regression test for switching the
+// field from plain string to the enum type).
+func TestBucketRequest_RetentionMode(t *testing.T) {
+	t.Run("valid retention mode unmarshals", func(t *testing.T) {
+		var br BucketRequest
+		if err := json.Unmarshal([]byte(`{"RetentionMode":"GOVERNANCE"}`), &br); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if br.RetentionMode != RetentionModeGovernance {
+			t.Errorf("RetentionMode = %q, want %q", br.RetentionMode, RetentionModeGovernance)
+		}
+	})
+	t.Run("invalid retention mode rejected", func(t *testing.T) {
+		var br BucketRequest
+		if err := json.Unmarshal([]byte(`{"RetentionMode":"Strict"}`), &br); err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}

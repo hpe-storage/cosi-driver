@@ -1249,26 +1249,6 @@ func TestCreateS3Client(t *testing.T) {
 	// ...existing code...
 }
 
-// TestParseVersioning tests the parseVersioning function for extracting the versioning parameter.
-func TestParseVersioning(t *testing.T) {
-	// ...existing code...
-}
-
-// TestParseCompression tests the parseCompression function for extracting the compression parameter.
-func TestParseCompression(t *testing.T) {
-	// ...existing code...
-}
-
-// TestParseObjectLock tests the parseObjectLock function for extracting object lock parameters.
-func TestParseObjectLock(t *testing.T) {
-	// ...existing code...
-}
-
-// TestParseBucketTags tests the parseBucketTags function for extracting bucket tags.
-func TestParseBucketTags(t *testing.T) {
-	// ...existing code...
-}
-
 func createSecret(secretName string, namespace string, accessKey []byte, secretKey []byte, endpoint []byte, glcpCreds *utils.IAMCredentials) *v1.Secret {
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

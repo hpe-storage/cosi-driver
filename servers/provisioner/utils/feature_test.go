@@ -1,4 +1,4 @@
-// © Copyright 2024 Hewlett Packard Enterprise Development LP
+// © Copyright Hewlett Packard Enterprise Development LP
 
 // Package utils
 package utils

@@ -302,25 +302,40 @@ func RetentionIntervalFromParams(param map[string]string, key string) (Retention
 }
 
 // ToDaysYears decomposes the interval into (days, years) using the rules in
-// the type's doc comment. The zero value returns (0, 0). It re-uses the same
-// regex that validates the textual form so the integer and unit are parsed
-// exactly once and an unrecognised value defensively returns (0, 0).
-func (r RetentionInterval) ToDaysYears() (days, years int) {
+// the type's doc comment. The zero value (empty string) returns (0, 0, nil)
+// — it represents "interval not set" and is a valid input.
+//
+// A non-empty value that does not match the validation regex returns an
+// error. This can only happen if a caller constructed a RetentionInterval
+// outside ParseRetentionInterval / UnmarshalJSON / RetentionIntervalFromParams
+// (e.g. by direct string conversion). Surfacing it rather than silently
+// returning (0, 0) prevents an unvalidated interval from being indistinguishable
+// from an absent one.
+func (r RetentionInterval) ToDaysYears() (days, years int, err error) {
+	if r == "" {
+		return 0, 0, nil
+	}
 	m := retentionIntervalRe.FindStringSubmatch(string(r))
 	if m == nil {
-		return 0, 0
+		return 0, 0, fmt.Errorf(
+			"invalid RetentionInterval %q: value was not produced by ParseRetentionInterval",
+			string(r))
 	}
-	n, err := strconv.Atoi(m[1])
-	if err != nil || n <= 0 {
-		return 0, 0
+	n, convErr := strconv.Atoi(m[1])
+	if convErr != nil || n <= 0 {
+		return 0, 0, fmt.Errorf(
+			"invalid RetentionInterval %q: integer component is not a positive number",
+			string(r))
 	}
 	switch m[2] {
 	case "d":
-		return n, 0
+		return n, 0, nil
 	case "m":
-		return n * 30, 0
+		return n * 30, 0, nil
 	case "y":
-		return 0, n
+		return 0, n, nil
 	}
-	return 0, 0
+	return 0, 0, fmt.Errorf(
+		"invalid RetentionInterval %q: unrecognised unit %q",
+		string(r), m[2])
 }

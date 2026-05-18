@@ -453,13 +453,37 @@ func (c *S3Client) SetObjectLockConfiguration(ctx context.Context, bucketName, e
 
 // --- Modular parameter parsing helpers ---
 
+// validateBucketSemantics enforces every cross-field invariant on
+// BucketClass parameters in one place. Field-level validation (enum
+// membership, regex form) lives in the typed helpers in the utils package;
+// the rules here describe how those validated fields must combine.
+//
+// Returning the rule violations explicitly — rather than silently dropping
+// orphan settings — prevents the "I configured retention but the bucket
+// doesn't have it" class of misconfiguration.
+func validateBucketSemantics(versioning, locking utils.Feature,
+	retentionMode utils.RetentionMode, interval utils.RetentionInterval) error {
+
+	hasRetention := retentionMode != "" || interval != ""
+	switch {
+	case locking == utils.FeatureEnabled && versioning != utils.FeatureEnabled:
+		return errors.New("object locking requires versioning to be enabled")
+	case hasRetention && locking != utils.FeatureEnabled:
+		return errors.New("retentionMode and defaultRetentionInterval require locking to be enabled")
+	case locking == utils.FeatureEnabled && (retentionMode == "" || interval == ""):
+		return errors.New("locking=Enabled requires both retentionMode and defaultRetentionInterval")
+	}
+	return nil
+}
+
 // parseBucketParams parses every BucketClass parameter consumed by bucket
 // creation into a single validated utils.BucketRequest. All field-level
 // validation (enum membership for `versioning` / `compression` / `locking` /
 // `retentionMode`, regex form for `defaultRetentionInterval`) lives in the
 // typed helpers in the utils package; this function only stitches them
-// together, applies the `versioning` default, and enforces the cross-field
-// invariant that object locking requires versioning to be enabled.
+// together, applies the `versioning` default, runs cross-field semantic
+// validation via validateBucketSemantics, and finally decomposes the
+// interval into the (days, years) pair the backend consumes.
 //
 // Returning a populated utils.BucketRequest keeps the callers free of
 // per-field plumbing and gives a single place to add future parameters.
@@ -487,10 +511,13 @@ func parseBucketParams(param map[string]string) (utils.BucketRequest, error) {
 	if err != nil {
 		return utils.BucketRequest{}, err
 	}
-	if locking == utils.FeatureEnabled && versioning != utils.FeatureEnabled {
-		return utils.BucketRequest{}, errors.New("Object locking requires versioning to be enabled.")
+	if err := validateBucketSemantics(versioning, locking, retentionMode, interval); err != nil {
+		return utils.BucketRequest{}, err
 	}
-	days, years := interval.ToDaysYears()
+	days, years, err := interval.ToDaysYears()
+	if err != nil {
+		return utils.BucketRequest{}, err
+	}
 	return utils.BucketRequest{
 		Compression:     compression,
 		Versioning:      versioning,

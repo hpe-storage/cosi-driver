@@ -316,17 +316,28 @@ func TestRetentionInterval_ToDaysYears(t *testing.T) {
 		input     RetentionInterval
 		wantDays  int
 		wantYears int
+		wantErr   bool
 	}{
-		{"empty", "", 0, 0},
-		{"30d", "30d", 30, 0},
-		{"2m -> 60 days", "2m", 60, 0},
-		{"1m -> 30 days", "1m", 30, 0},
-		{"1y -> 1 year", "1y", 0, 1},
-		{"5y -> 5 years", "5y", 0, 5},
+		{"empty is valid zero", "", 0, 0, false},
+		{"30d", "30d", 30, 0, false},
+		{"2m -> 60 days", "2m", 60, 0, false},
+		{"1m -> 30 days", "1m", 30, 0, false},
+		{"1y -> 1 year", "1y", 0, 1, false},
+		{"5y -> 5 years", "5y", 0, 5, false},
+		// Values that should never appear in production (they can only be
+		// constructed by skipping ParseRetentionInterval). The contract is
+		// that ToDaysYears surfaces them rather than returning (0, 0).
+		{"malformed garbage rejected", "garbage", 0, 0, true},
+		{"unit-only rejected", "d", 0, 0, true},
+		{"unknown unit rejected", "5x", 0, 0, true},
+		{"leading zero rejected", "05d", 0, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d, y := tt.input.ToDaysYears()
+			d, y, err := tt.input.ToDaysYears()
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("(%q).ToDaysYears() err = %v, wantErr=%v", tt.input, err, tt.wantErr)
+			}
 			if d != tt.wantDays || y != tt.wantYears {
 				t.Errorf("(%q).ToDaysYears() = (%d, %d), want (%d, %d)",
 					tt.input, d, y, tt.wantDays, tt.wantYears)

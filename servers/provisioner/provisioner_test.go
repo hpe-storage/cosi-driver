@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"hpe-cosi-osp/iam"
@@ -19,6 +20,8 @@ import (
 	gomonkey "github.com/agiledragon/gomonkey/v2"
 	"github.com/go-logr/logr"
 	"github.com/go-logr/stdr"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -1247,6 +1250,273 @@ func TestDriverRevokeBucketAccess(t *testing.T) {
 // It ensures that the client is initialized with the correct parameters.
 func TestCreateS3Client(t *testing.T) {
 	// ...existing code...
+}
+
+// TestParseBucketParams exercises every field-level and cross-field
+// validation rule consumed by DriverCreateBucket. It is a pure unit test
+// (no mocks, no I/O) because parseBucketParams is a pure function — that
+// is the point of having factored it out.
+func TestParseBucketParams(t *testing.T) {
+	tests := []struct {
+		name      string
+		params    map[string]string
+		wantErr   bool
+		errSubstr string                                    // optional: assert the message names the offending rule
+		check     func(t *testing.T, r utils.BucketRequest) // optional: assert produced struct
+	}{
+		// --- happy paths ----------------------------------------------------
+		{
+			name:   "all params omitted yields defaults",
+			params: map[string]string{},
+			check: func(t *testing.T, r utils.BucketRequest) {
+				if r.Versioning != utils.FeatureDisabled {
+					t.Errorf("versioning default = %q, want Disabled", r.Versioning)
+				}
+				if r.Compression != "" || r.Locking != "" || r.RetentionMode != "" ||
+					r.ObjectLockDays != 0 || r.ObjectLockYears != 0 {
+					t.Errorf("non-versioning fields should be zero, got %+v", r)
+				}
+			},
+		},
+		{
+			name: "case-insensitive keys accepted",
+			params: map[string]string{
+				"Versioning":  "Enabled",
+				"COMPRESSION": "Disabled",
+			},
+			check: func(t *testing.T, r utils.BucketRequest) {
+				if r.Versioning != utils.FeatureEnabled {
+					t.Errorf("versioning = %q, want Enabled", r.Versioning)
+				}
+				if r.Compression != utils.FeatureDisabled {
+					t.Errorf("compression = %q, want Disabled", r.Compression)
+				}
+			},
+		},
+		{
+			name: "full valid object-lock chain",
+			params: map[string]string{
+				"versioning":               "Enabled",
+				"locking":                  "Enabled",
+				"retentionMode":            "GOVERNANCE",
+				"defaultRetentionInterval": "30d",
+			},
+			check: func(t *testing.T, r utils.BucketRequest) {
+				if r.Locking != utils.FeatureEnabled ||
+					r.RetentionMode != utils.RetentionModeGovernance ||
+					r.ObjectLockDays != 30 || r.ObjectLockYears != 0 {
+					t.Errorf("unexpected result: %+v", r)
+				}
+			},
+		},
+		{
+			name: "years interval maps to ObjectLockYears",
+			params: map[string]string{
+				"versioning":               "Enabled",
+				"locking":                  "Enabled",
+				"retentionMode":            "COMPLIANCE",
+				"defaultRetentionInterval": "2y",
+			},
+			check: func(t *testing.T, r utils.BucketRequest) {
+				if r.ObjectLockDays != 0 || r.ObjectLockYears != 2 {
+					t.Errorf("days/years = (%d,%d), want (0,2)", r.ObjectLockDays, r.ObjectLockYears)
+				}
+			},
+		},
+		{
+			name: "months interval is normalised to days",
+			params: map[string]string{
+				"versioning":               "Enabled",
+				"locking":                  "Enabled",
+				"retentionMode":            "GOVERNANCE",
+				"defaultRetentionInterval": "3m",
+			},
+			check: func(t *testing.T, r utils.BucketRequest) {
+				if r.ObjectLockDays != 90 || r.ObjectLockYears != 0 {
+					t.Errorf("days/years = (%d,%d), want (90,0)", r.ObjectLockDays, r.ObjectLockYears)
+				}
+			},
+		},
+
+		// --- field-level validation ----------------------------------------
+		{
+			name:      "invalid compression rejected",
+			params:    map[string]string{"compression": "On"},
+			wantErr:   true,
+			errSubstr: "Feature",
+		},
+		{
+			name:      "invalid versioning rejected",
+			params:    map[string]string{"versioning": "yes"},
+			wantErr:   true,
+			errSubstr: "Feature",
+		},
+		{
+			name:      "invalid locking rejected",
+			params:    map[string]string{"locking": "maybe"},
+			wantErr:   true,
+			errSubstr: "Feature",
+		},
+		{
+			name:      "invalid retentionMode rejected",
+			params:    map[string]string{"retentionMode": "WEAK"},
+			wantErr:   true,
+			errSubstr: "RetentionMode",
+		},
+		{
+			name:      "invalid defaultRetentionInterval rejected",
+			params:    map[string]string{"defaultRetentionInterval": "30q"},
+			wantErr:   true,
+			errSubstr: "RetentionInterval",
+		},
+
+		// --- cross-field validation (the new rules) ------------------------
+		{
+			name: "locking=Enabled without versioning rejected",
+			params: map[string]string{
+				"locking":                  "Enabled",
+				"versioning":               "Disabled",
+				"retentionMode":            "GOVERNANCE",
+				"defaultRetentionInterval": "30d",
+			},
+			wantErr:   true,
+			errSubstr: "versioning",
+		},
+		{
+			name: "locking=Enabled with versioning omitted (defaults to Disabled) rejected",
+			params: map[string]string{
+				"locking":                  "Enabled",
+				"retentionMode":            "GOVERNANCE",
+				"defaultRetentionInterval": "30d",
+			},
+			wantErr:   true,
+			errSubstr: "versioning",
+		},
+		{
+			name: "retentionMode without locking rejected",
+			params: map[string]string{
+				"retentionMode": "GOVERNANCE",
+			},
+			wantErr:   true,
+			errSubstr: "locking",
+		},
+		{
+			name: "defaultRetentionInterval without locking rejected",
+			params: map[string]string{
+				"defaultRetentionInterval": "30d",
+			},
+			wantErr:   true,
+			errSubstr: "locking",
+		},
+		{
+			name: "retention settings with locking=Disabled rejected",
+			params: map[string]string{
+				"locking":                  "Disabled",
+				"retentionMode":            "COMPLIANCE",
+				"defaultRetentionInterval": "1y",
+			},
+			wantErr:   true,
+			errSubstr: "locking",
+		},
+		{
+			name: "locking=Enabled without retentionMode rejected",
+			params: map[string]string{
+				"versioning":               "Enabled",
+				"locking":                  "Enabled",
+				"defaultRetentionInterval": "30d",
+			},
+			wantErr:   true,
+			errSubstr: "retentionMode",
+		},
+		{
+			name: "locking=Enabled without defaultRetentionInterval rejected",
+			params: map[string]string{
+				"versioning":    "Enabled",
+				"locking":       "Enabled",
+				"retentionMode": "GOVERNANCE",
+			},
+			wantErr:   true,
+			errSubstr: "defaultRetentionInterval",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseBucketParams(tt.params)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("parseBucketParams() err = %v, wantErr=%v", err, tt.wantErr)
+			}
+			if tt.wantErr {
+				if tt.errSubstr != "" && err != nil && !strings.Contains(err.Error(), tt.errSubstr) {
+					t.Errorf("error %q does not contain %q", err.Error(), tt.errSubstr)
+				}
+				return
+			}
+			if tt.check != nil {
+				tt.check(t, got)
+			}
+		})
+	}
+}
+
+// TestDriverCreateBucket_InvalidArgument confirms that every validation
+// failure inside parseBucketParams surfaces to the gRPC client as
+// codes.InvalidArgument. It is deliberately decoupled from the heavy mock
+// chain in TestDriverCreateBucket: parameter validation rejects the request
+// before CreateBucket / SetObjectLockConfiguration are ever called, so only
+// createS3Client needs patching.
+func TestDriverCreateBucket_InvalidArgument(t *testing.T) {
+	mockS3c := &S3Client{
+		BaseURL:    "http://mock-s3",
+		HTTPClient: &http.Client{},
+		AccessKey:  "k",
+		SecretKey:  "k",
+	}
+	patches := gomonkey.ApplyFunc(createS3Client,
+		func(_ context.Context, _ map[string]string, _ *kubernetes.Clientset) (*S3Client, error) {
+			return mockS3c, nil
+		})
+	defer patches.Reset()
+
+	log := stdr.New(stdlog.New(os.Stdout, "", stdlog.LstdFlags))
+	s := &Server{
+		log:             log,
+		K8sClientset:    &kubernetes.Clientset{},
+		BucketClientset: &bucketclientset.Clientset{},
+	}
+
+	cases := []struct {
+		name   string
+		params map[string]string
+	}{
+		{"bad feature value", map[string]string{"compression": "On"}},
+		{"bad retentionMode", map[string]string{"retentionMode": "WEAK"}},
+		{"bad interval", map[string]string{"defaultRetentionInterval": "30q"}},
+		{"locking without versioning", map[string]string{
+			"locking": "Enabled", "versioning": "Disabled",
+			"retentionMode": "GOVERNANCE", "defaultRetentionInterval": "30d",
+		}},
+		{"retention without locking", map[string]string{
+			"retentionMode": "GOVERNANCE", "defaultRetentionInterval": "30d",
+		}},
+		{"locking without retention settings", map[string]string{
+			"versioning": "Enabled", "locking": "Enabled",
+		}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			_, err := s.DriverCreateBucket(context.TODO(), &cosi.DriverCreateBucketRequest{
+				Name:       "b",
+				Parameters: c.params,
+			})
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+			if got := status.Code(err); got != codes.InvalidArgument {
+				t.Errorf("status code = %v, want InvalidArgument; err=%v", got, err)
+			}
+		})
+	}
 }
 
 func createSecret(secretName string, namespace string, accessKey []byte, secretKey []byte, endpoint []byte, glcpCreds *utils.IAMCredentials) *v1.Secret {

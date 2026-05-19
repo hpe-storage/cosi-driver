@@ -149,15 +149,28 @@ func unmarshalStringJSON[T stringEnum](data []byte, target *T, parse func(string
 // map (case-insensitive) and validate its value" adapter. It returns the
 // zero value (with no error) when the key is absent.
 //
-// Used by every *FromParams helper in this file so the lookup step is
-// implemented exactly once.
-func lookupStringParam[T stringEnum](param map[string]string, key string, parse func(string) (T, error)) (T, error) {
+// When parse rejects the value, the error is formatted in the uniform
+// user-facing shape:
+//
+//	Invalid bucket parameters: <key>="<value>" is invalid; use <hint> in BucketClass and recreate BucketClaim
+//
+// allowedHint is a short human-readable description of the accepted values
+// (e.g. "Enabled or Disabled", "values like 30d, 2m or 1y"). The technical
+// detail from parse is intentionally discarded so the message surfaced as a
+// Kubernetes event stays short and actionable.
+//
+// Used by every *FromParams helper in this file so the lookup step and the
+// error shape are implemented exactly once.
+func lookupStringParam[T stringEnum](param map[string]string, key string,
+	parse func(string) (T, error), allowedHint string) (T, error) {
 	var zero T
 	for k, v := range param {
 		if strings.EqualFold(k, key) {
 			parsed, err := parse(v)
 			if err != nil {
-				return zero, fmt.Errorf("invalid value for %s: %w", key, err)
+				return zero, fmt.Errorf(
+					"Invalid bucket parameters: %s=%q is invalid; use %s in BucketClass and recreate BucketClaim",
+					key, v, allowedHint)
 			}
 			return parsed, nil
 		}
@@ -212,9 +225,10 @@ func (e enumSet[T]) unmarshalJSON(data []byte, target *T) error {
 }
 
 // fromParams delegates to the shared adapter, passing the enum's own parse
-// method as the validator.
+// method as the validator and a human-readable hint listing the accepted
+// values for user-facing error messages.
 func (e enumSet[T]) fromParams(param map[string]string, key string) (T, error) {
-	return lookupStringParam(param, key, e.parse)
+	return lookupStringParam(param, key, e.parse, e.allowedHint())
 }
 
 // join renders the declared enum members for error messages,
@@ -225,6 +239,26 @@ func (e enumSet[T]) join() string {
 		parts[i] = fmt.Sprintf("%q", string(v))
 	}
 	return strings.Join(parts, ", ")
+}
+
+// allowedHint renders the declared enum members in a form suitable for
+// user-facing messages: "Enabled or Disabled" for two values,
+// "A, B or C" for three or more.
+func (e enumSet[T]) allowedHint() string {
+	parts := make([]string, len(e.values))
+	for i, v := range e.values {
+		parts[i] = string(v)
+	}
+	switch len(parts) {
+	case 0:
+		return ""
+	case 1:
+		return parts[0]
+	case 2:
+		return parts[0] + " or " + parts[1]
+	default:
+		return strings.Join(parts[:len(parts)-1], ", ") + " or " + parts[len(parts)-1]
+	}
 }
 
 // --- Feature enum (Compression / Versioning / Locking) ---------------------
@@ -340,7 +374,7 @@ func (r *RetentionInterval) UnmarshalJSON(data []byte) error {
 // RetentionIntervalFromParams looks up key in param (case-insensitive) and
 // returns a validated RetentionInterval.
 func RetentionIntervalFromParams(param map[string]string, key string) (RetentionInterval, error) {
-	return lookupStringParam(param, key, ParseRetentionInterval)
+	return lookupStringParam(param, key, ParseRetentionInterval, "values like 30d, 2m or 1y")
 }
 
 // ToDaysYears decomposes the interval into (days, years) using the rules in

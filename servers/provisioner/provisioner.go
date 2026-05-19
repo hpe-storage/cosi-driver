@@ -467,11 +467,11 @@ func validateBucketSemantics(versioning, locking utils.Feature,
 	hasRetention := retentionMode != "" || interval != ""
 	switch {
 	case locking == utils.FeatureEnabled && versioning != utils.FeatureEnabled:
-		return errors.New("object locking requires versioning to be enabled")
+		return errors.New("Invalid bucket parameters: object locking requires versioning; enable versioning in BucketClass and recreate BucketClaim")
 	case hasRetention && locking != utils.FeatureEnabled:
-		return errors.New("retentionMode and defaultRetentionInterval require locking to be enabled")
+		return errors.New("Invalid bucket parameters: retentionMode and defaultRetentionInterval require object locking; enable locking in BucketClass and recreate BucketClaim")
 	case locking == utils.FeatureEnabled && (retentionMode == "" || interval == ""):
-		return errors.New("locking=Enabled requires both retentionMode and defaultRetentionInterval")
+		return errors.New("Invalid bucket parameters: object locking requires retentionMode and defaultRetentionInterval; set both in BucketClass and recreate BucketClaim")
 	}
 	return nil
 }

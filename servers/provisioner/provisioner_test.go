@@ -1343,31 +1343,31 @@ func TestParseBucketParams(t *testing.T) {
 			name:      "invalid compression rejected",
 			params:    map[string]string{"compression": "On"},
 			wantErr:   true,
-			errSubstr: "Feature",
+			errSubstr: `compression="On" is invalid`,
 		},
 		{
 			name:      "invalid versioning rejected",
 			params:    map[string]string{"versioning": "yes"},
 			wantErr:   true,
-			errSubstr: "Feature",
+			errSubstr: `versioning="yes" is invalid`,
 		},
 		{
 			name:      "invalid locking rejected",
 			params:    map[string]string{"locking": "maybe"},
 			wantErr:   true,
-			errSubstr: "Feature",
+			errSubstr: `locking="maybe" is invalid`,
 		},
 		{
 			name:      "invalid retentionMode rejected",
 			params:    map[string]string{"retentionMode": "WEAK"},
 			wantErr:   true,
-			errSubstr: "RetentionMode",
+			errSubstr: `retentionMode="WEAK" is invalid`,
 		},
 		{
 			name:      "invalid defaultRetentionInterval rejected",
 			params:    map[string]string{"defaultRetentionInterval": "30q"},
 			wantErr:   true,
-			errSubstr: "RetentionInterval",
+			errSubstr: `defaultRetentionInterval="30q" is invalid`,
 		},
 
 		// --- cross-field validation (the new rules) ------------------------

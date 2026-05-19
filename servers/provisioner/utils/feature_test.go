@@ -5,6 +5,7 @@ package utils
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -89,38 +90,6 @@ func TestFeature_UnmarshalJSON(t *testing.T) {
 			}
 		})
 	}
-}
-
-// TestBucketRequest_UnmarshalJSON ensures the enum constraint flows through
-// to fields of type Feature on real request structs.
-func TestBucketRequest_UnmarshalJSON(t *testing.T) {
-	t.Run("valid payload unmarshals", func(t *testing.T) {
-		var br BucketRequest
-		if err := json.Unmarshal([]byte(`{"Compression":"Enabled","Versioning":"Enabled","Locking":"Disabled"}`), &br); err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if br.Compression != FeatureEnabled || br.Versioning != FeatureEnabled || br.Locking != FeatureDisabled {
-			t.Errorf("unexpected values: %+v", br)
-		}
-	})
-	t.Run("invalid Compression rejected", func(t *testing.T) {
-		var br BucketRequest
-		if err := json.Unmarshal([]byte(`{"Compression":"On"}`), &br); err == nil {
-			t.Fatal("expected error, got nil")
-		}
-	})
-	t.Run("invalid Versioning rejected", func(t *testing.T) {
-		var br BucketRequest
-		if err := json.Unmarshal([]byte(`{"Versioning":"yes"}`), &br); err == nil {
-			t.Fatal("expected error, got nil")
-		}
-	})
-	t.Run("invalid Locking rejected", func(t *testing.T) {
-		var br BucketRequest
-		if err := json.Unmarshal([]byte(`{"Locking":"off"}`), &br); err == nil {
-			t.Fatal("expected error, got nil")
-		}
-	})
 }
 
 // TestFeatureFromParams ensures the unified parameter helper looks up keys
@@ -372,23 +341,69 @@ func TestRetentionIntervalFromParams(t *testing.T) {
 	}
 }
 
-// TestBucketRequest_RetentionMode confirms RetentionMode validation flows
-// through to the BucketRequest struct (regression test for switching the
-// field from plain string to the enum type).
-func TestBucketRequest_RetentionMode(t *testing.T) {
-	t.Run("valid retention mode unmarshals", func(t *testing.T) {
-		var br BucketRequest
-		if err := json.Unmarshal([]byte(`{"RetentionMode":"GOVERNANCE"}`), &br); err != nil {
-			t.Fatalf("unexpected error: %v", err)
+// TestBucketRequest_WirePayload guards the contract that CreateBucket's
+// JSON wire payload matches what the HomeFleet REST endpoint accepts:
+//
+//	{"Compression": <bool>, "Versioning": "<value>", "Locking": "<value>"}
+//
+// In particular Compression is a JSON *boolean* (not the string "Enabled"
+// used internally) and the retention-related fields never appear on the
+// wire — they drive a separate SetObjectLockConfiguration call. The
+// backend rejects any deviation with HTTP 400 InvalidRequest, so this is
+// a hard contract worth pinning down.
+func TestBucketRequest_WirePayload(t *testing.T) {
+	t.Run("all enabled with retention", func(t *testing.T) {
+		br := BucketRequest{
+			Compression:     FeatureEnabled,
+			Versioning:      FeatureEnabled,
+			Locking:         FeatureEnabled,
+			RetentionMode:   RetentionModeGovernance,
+			ObjectLockDays:  30,
+			ObjectLockYears: 0,
 		}
-		if br.RetentionMode != RetentionModeGovernance {
-			t.Errorf("RetentionMode = %q, want %q", br.RetentionMode, RetentionModeGovernance)
+		out, err := json.Marshal(br)
+		if err != nil {
+			t.Fatalf("marshal failed: %v", err)
+		}
+		got := string(out)
+		want := `{"Compression":true,"Versioning":"Enabled","Locking":"Enabled"}`
+		if got != want {
+			t.Errorf("wire payload mismatch\n got: %s\nwant: %s", got, want)
 		}
 	})
-	t.Run("invalid retention mode rejected", func(t *testing.T) {
-		var br BucketRequest
-		if err := json.Unmarshal([]byte(`{"RetentionMode":"Strict"}`), &br); err == nil {
-			t.Fatal("expected error, got nil")
+	t.Run("compression disabled emits boolean false", func(t *testing.T) {
+		br := BucketRequest{
+			Compression: FeatureDisabled,
+			Versioning:  FeatureDisabled,
+		}
+		out, err := json.Marshal(br)
+		if err != nil {
+			t.Fatalf("marshal failed: %v", err)
+		}
+		got := string(out)
+		want := `{"Compression":false,"Versioning":"Disabled"}`
+		if got != want {
+			t.Errorf("wire payload mismatch\n got: %s\nwant: %s", got, want)
+		}
+	})
+	t.Run("driver-internal fields never appear on the wire", func(t *testing.T) {
+		br := BucketRequest{
+			Compression:     FeatureEnabled,
+			Versioning:      FeatureEnabled,
+			Locking:         FeatureEnabled,
+			RetentionMode:   RetentionModeCompliance,
+			ObjectLockDays:  0,
+			ObjectLockYears: 7,
+		}
+		out, err := json.Marshal(br)
+		if err != nil {
+			t.Fatalf("marshal failed: %v", err)
+		}
+		got := string(out)
+		for _, forbidden := range []string{"RetentionMode", "ObjectLockDays", "ObjectLockYears", "COMPLIANCE", "GOVERNANCE"} {
+			if strings.Contains(got, forbidden) {
+				t.Errorf("wire payload leaked driver-internal token %q: %s", forbidden, got)
+			}
 		}
 	})
 }

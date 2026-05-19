@@ -39,14 +39,56 @@ type IAMCredentials struct {
 	OnPremCloudCA     string // Base64 encoded CA certificate for on-premise DSCC
 }
 
-// BucketRequest defines the structure for bucket creation options like versioning, locking, and compression.
+// BucketRequest carries every BucketClass parameter consumed by bucket
+// creation.
+//
+// It plays two distinct roles:
+//
+//  1. Internal: a single validated value passed from parseBucketParams into
+//     DriverCreateBucket. Every field is read by Go field access (the
+//     retention trio is forwarded to SetObjectLockConfiguration, which is
+//     a separate REST call from CreateBucket).
+//
+//  2. Wire: the CreateBucket REST endpoint accepts JSON of the form
+//     {"Compression": <bool>, "Versioning": "<Enabled|Disabled>", "Locking":
+//     "<Enabled|Disabled>"} and rejects any other field or type with HTTP
+//     400 InvalidRequest. In particular Compression is a JSON boolean, not
+//     the string "Enabled"/"Disabled" used everywhere else.
+//
+// To keep field types convenient for internal use (all three feature flags
+// share the Feature enum) while honouring the wire contract, the legacy
+// wire format is produced by the MarshalJSON method below rather than by
+// struct tags. The retention trio is driver-internal only and is omitted
+// from the wire entirely.
 type BucketRequest struct {
-	Compression     Feature       `json:"Compression,omitempty"`
-	Versioning      Feature       `json:"Versioning,omitempty"`
-	Locking         Feature       `json:"Locking,omitempty"`
-	RetentionMode   RetentionMode `json:"RetentionMode,omitempty"`
-	ObjectLockDays  int           `json:"ObjectLockDays,omitempty"`
-	ObjectLockYears int           `json:"ObjectLockYears,omitempty"`
+	Compression     Feature
+	Versioning      Feature
+	Locking         Feature
+	RetentionMode   RetentionMode
+	ObjectLockDays  int
+	ObjectLockYears int
+}
+
+// MarshalJSON emits the exact wire payload accepted by the HomeFleet
+// CreateBucket REST endpoint:
+//
+//	{"Compression": <bool>, "Versioning": "<value>", "Locking": "<value>"}
+//
+// Compression is encoded as a JSON boolean (true when FeatureEnabled).
+// Versioning and Locking are encoded as strings and omitted when empty.
+// The retention-related fields on BucketRequest are intentionally absent
+// from the wire payload — they drive a separate SetObjectLockConfiguration
+// call in DriverCreateBucket.
+func (b BucketRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Compression bool   `json:"Compression"`
+		Versioning  string `json:"Versioning,omitempty"`
+		Locking     string `json:"Locking,omitempty"`
+	}{
+		Compression: b.Compression == FeatureEnabled,
+		Versioning:  string(b.Versioning),
+		Locking:     string(b.Locking),
+	})
 }
 
 // ObjectLockConfiguration represents the XML structure for object lock configuration.

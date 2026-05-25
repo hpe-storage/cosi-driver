@@ -18,6 +18,7 @@ const (
 	//KEYS in glcp secret
 	GLCP_USER_CLIENTID   = "glcpUserClientId"
 	GLCP_USER_SECRET_KEY = "glcpUserSecretKey"
+	GLCP_WORKSPACE_ID    = "glcpWorkspaceId"
 	GLCP_COMMON_CLOUD    = "GLCP_COMMON_CLOUD"
 	DSCC_ZONE            = "dsccZone"
 	ALLETRA_MP_X10K_SNO  = "clusterSerialNumber"
@@ -31,6 +32,7 @@ const (
 type IAMCredentials struct {
 	GLCPUser          string
 	GLCPUserSecretKey string
+	GLCPWorkspaceId   string
 	GLCPCommonCloud   string
 	DSCCZone          string
 	SystemId          string

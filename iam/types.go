@@ -7,12 +7,14 @@ import (
 )
 
 var (
-	ACCESS_GRANT_TYPE       = "client_credentials"
-	GLCP_ACCESS_TOKEN_URL   = "as/token.oauth2"
-	HTTP_REQUEST_TIMEOUT    = 30 * time.Second
-	APPLICATION_URL_ENCODED = "application/x-www-form-urlencoded"
-	DSCC_POLICY_VERSION     = "2012-10-17"
-	WAIT_TIME               = 2 * time.Second
+	ACCESS_GRANT_TYPE           = "client_credentials"
+	GLCP_ACCESS_TOKEN_URL       = "as/token.oauth2"
+	GLCP_ACCESS_ENDPOINT_PREFIX = "authorization/v2/oauth2"
+	GLCP_ACCESS_ENDPOINT_SUFFIX = "token"
+	HTTP_REQUEST_TIMEOUT        = 30 * time.Second
+	APPLICATION_URL_ENCODED     = "application/x-www-form-urlencoded"
+	DSCC_POLICY_VERSION         = "2012-10-17"
+	WAIT_TIME                   = 2 * time.Second
 )
 
 // Defines types of entities in DSCC , ex: USER|POLICY
@@ -65,4 +67,5 @@ type HttpErrorCode string
 
 const (
 	ERR_RESOURCE_NOT_FOUND HttpErrorCode = "ERR_RESOURCE_NOT_FOUND"
+	DOWNSTREAM_SERVICE_ERROR HttpErrorCode = "DOWNSTREAM_SERVICE_ERROR"
 )

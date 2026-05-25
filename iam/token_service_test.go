@@ -23,10 +23,11 @@ func Test_GetAccessToken(t *testing.T) {
 	glcpUrl := "sso.cloud.example.com"
 	glcpUser := "xxxxxxx-zzz-123-3456"
 	glcpUserSecret := "zzzzzrandomxxxxxxzzzzz"
+	glcpWorkspaceId := "workspace-1234"
 	proxy := "http://dummy_proxy:8080"
 	log := stdr.New(stdlog.New(os.Stdout, "", stdlog.LstdFlags))
 
-	ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, proxy, "", &log)
+	ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, glcpWorkspaceId, proxy, "", &log)
 
 	t.Run("GetAccessToken successful", func(t *testing.T) {
 		expToken := testExpToken
@@ -102,13 +103,14 @@ func Test_GetAccessToken_WithCA(t *testing.T) {
 	glcpUrl := "sso.on-prem.example.com"
 	glcpUser := "xxxxxxx-zzz-123-3456"
 	glcpUserSecret := "zzzzzrandomxxxxxxzzzzz"
+	glcpWorkspaceId := "workspace-1234"
 	log := stdr.New(stdlog.New(os.Stdout, "", stdlog.LstdFlags))
 
 	// Generate CA certificate at runtime to avoid hardcoded certificate patterns in source code
 	validCACert := generateTestCACert(t)
 
 	t.Run("GetAccessToken with CA certificate successful", func(t *testing.T) {
-		ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, "", validCACert, &log)
+		ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, glcpWorkspaceId, "", validCACert, &log)
 		expToken := testExpToken
 		oauth2 := oauth2_token{
 			AccessToken: expToken,
@@ -131,7 +133,7 @@ func Test_GetAccessToken_WithCA(t *testing.T) {
 	})
 
 	t.Run("GetAccessToken with CA certificate and proxy", func(t *testing.T) {
-		ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, "http://dummy_proxy:8080", validCACert, &log)
+		ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, glcpWorkspaceId, "http://dummy_proxy:8080", validCACert, &log)
 		expToken := testExpToken
 		oauth2 := oauth2_token{
 			AccessToken: expToken,
@@ -154,7 +156,7 @@ func Test_GetAccessToken_WithCA(t *testing.T) {
 	})
 
 	t.Run("GetAccessToken with invalid base64 CA certificate", func(t *testing.T) {
-		ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, "", "not-valid-base64!!!", &log)
+		ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, glcpWorkspaceId, "", "not-valid-base64!!!", &log)
 		// PostRequest will fail because buildHTTPTransport will fail with invalid base64
 		token, err := ts.GetAccessToken()
 		if err == nil {
@@ -165,11 +167,29 @@ func Test_GetAccessToken_WithCA(t *testing.T) {
 
 	t.Run("GetAccessToken with invalid PEM CA certificate", func(t *testing.T) {
 		// Valid base64 but not a valid PEM certificate
-		ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, "", "dGhpcyBpcyBub3QgYSB2YWxpZCBjZXJ0aWZpY2F0ZQ==", &log)
+		ts := NewTokenService(glcpUrl, glcpUser, glcpUserSecret, glcpWorkspaceId, "", "dGhpcyBpcyBub3QgYSB2YWxpZCBjZXJ0aWZpY2F0ZQ==", &log)
 		token, err := ts.GetAccessToken()
 		if err == nil {
 			t.Errorf("FAILED: expected error for invalid PEM CA certificate")
 		}
 		assert.Equal(t, len(token), 0)
+	})
+}
+
+func Test_buildTokenUrl(t *testing.T) {
+	log := stdr.New(stdlog.New(os.Stdout, "", stdlog.LstdFlags))
+    autUri := "https://sso.cloud.example.com"
+	t.Run("buildTokenUrl with workspace ID", func(t *testing.T) {
+		ts := NewTokenService(autUri, "client-id", "client-secret", "workspace-1234", "", "", &log)
+		uri := ts.buildTokenUrl()
+		expected := autUri + "/authorization/v2/oauth2/workspace-1234/token"
+		assert.Equal(t, uri, expected)
+	})
+
+	t.Run("buildTokenUrl without workspace ID (legacy)", func(t *testing.T) {
+		ts := NewTokenService(autUri, "client-id", "client-secret", "", "", "", &log)
+		uri := ts.buildTokenUrl()
+		expected := autUri + "/as/token.oauth2"
+		assert.Equal(t, uri, expected)
 	})
 }

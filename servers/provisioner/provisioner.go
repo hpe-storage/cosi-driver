@@ -706,7 +706,8 @@ func getSecret(client *kubernetes.Clientset, ctx context.Context, name, namespac
 
 // Retrieves the GLCP credentials(required to communicate with DSCC) from the passed secret data
 // returns error, if any of the necessary credentials are missing in the passed secret data
-func getGLCPCDetails(data map[string][]byte) (*utils.IAMCredentials, error) {
+func getGLCPCDetails(ctx context.Context, data map[string][]byte) (*utils.IAMCredentials, error) {
+	log := utils.GetLoggerFromContext(ctx)
 	getData := func(key string) (str string, err error) {
 		if val, ok := data[key]; ok {
 			str = string(val)[:]
@@ -720,7 +721,7 @@ func getGLCPCDetails(data map[string][]byte) (*utils.IAMCredentials, error) {
 	glcpCommonCloud := os.Getenv(utils.GLCP_COMMON_CLOUD)
 
 	if len(glcpCommonCloud) == 0 {
-		return nil, fmt.Errorf("unable to fetch GLCP cloud URL form environment")
+		return nil, fmt.Errorf("unable to fetch GLCP cloud URL from environment")
 	}
 	glcpUserClientId, err := getData(utils.GLCP_USER_CLIENTID)
 	if err != nil {
@@ -729,6 +730,11 @@ func getGLCPCDetails(data map[string][]byte) (*utils.IAMCredentials, error) {
 	glcpUserSecretKey, err := getData(utils.GLCP_USER_SECRET_KEY)
 	if err != nil {
 		return nil, err
+	}
+	glcpWorkspaceId, err := getData(utils.GLCP_WORKSPACE_ID)
+	if err != nil {
+		//TODO: Need to confirm with GLCP team & entirly move to new Auth by making this field mandatory.
+		log.Info("unable to fetch GLCP workspace ID from the mounted secret")
 	}
 	dsccZone, err := getData(utils.DSCC_ZONE)
 	if err != nil {
@@ -749,6 +755,7 @@ func getGLCPCDetails(data map[string][]byte) (*utils.IAMCredentials, error) {
 	return &utils.IAMCredentials{
 		GLCPUser:          glcpUserClientId,
 		GLCPUserSecretKey: glcpUserSecretKey,
+		GLCPWorkspaceId:   glcpWorkspaceId,
 		GLCPCommonCloud:   glcpCommonCloud,
 		DSCCZone:          dsccZone,
 		SystemId:          clusterSerialNumber,
@@ -762,7 +769,7 @@ func getGLCPCDetails(data map[string][]byte) (*utils.IAMCredentials, error) {
 // returns an error when S3 user,policy creation fails in DSCC
 func createBucketAccess(ctx context.Context, userName, policyName, bucketName string, data map[string][]byte) (string, string, error) {
 	log := utils.GetLoggerFromContext(ctx)
-	credentials, err := getGLCPCDetails(data)
+	credentials, err := getGLCPCDetails(ctx, data)
 	if err != nil {
 		return "", "", err
 	}
@@ -864,7 +871,7 @@ func createBucketAccess(ctx context.Context, userName, policyName, bucketName st
 func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName string, data map[string][]byte) error {
 	log := utils.GetLoggerFromContext(ctx)
 
-	credentials, err := getGLCPCDetails(data)
+	credentials, err := getGLCPCDetails(ctx, data)
 	if err != nil {
 		return err
 	}
@@ -957,7 +964,8 @@ func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName st
 
 // Fetches a fresh bearer token to access DSCC, through GLCP
 func getAccessToken(credentials *utils.IAMCredentials, log *logr.Logger) (string, error) {
-	ts := iam.NewTokenService(credentials.GLCPCommonCloud, credentials.GLCPUser, credentials.GLCPUserSecretKey, credentials.Proxy, credentials.OnPremCloudCA, log)
+	ts := iam.NewTokenService(credentials.GLCPCommonCloud, credentials.GLCPUser, credentials.GLCPUserSecretKey, credentials.GLCPWorkspaceId, 
+		  credentials.Proxy, credentials.OnPremCloudCA, log)
 	token, err := ts.GetAccessToken()
 	return token, err
 }

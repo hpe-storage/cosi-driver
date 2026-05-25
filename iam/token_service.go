@@ -32,17 +32,19 @@ type token_service struct {
 	glcpCloudUrl    string
 	apiCLientId     string
 	apiClientSecret string
+	glcpWorkspaceId string
 	proxy           string
 	onPremCloudCA   string // Base64 encoded CA certificate for on-premise DSCC
 	log             *logr.Logger
 }
 
 // Creates an instance of the TokenService struct
-func NewTokenService(glcpUrl, clientId, secret, proxy, onPremCloudCA string, log *logr.Logger) *token_service {
+func NewTokenService(glcpUrl, clientId, secret, workspaceId, proxy, onPremCloudCA string, log *logr.Logger) *token_service {
 	return &token_service{
 		glcpCloudUrl:    glcpUrl,
 		apiCLientId:     clientId,
 		apiClientSecret: secret,
+		glcpWorkspaceId: workspaceId,
 		proxy:           proxy,
 		onPremCloudCA:   onPremCloudCA,
 		log:             log,
@@ -53,10 +55,20 @@ func (t *token_service) string() (s string) {
 	return fmt.Sprintf("grant_type=%s&client_id=%s&client_secret=%s", ACCESS_GRANT_TYPE, t.apiCLientId, t.apiClientSecret)
 }
 
+func (t *token_service) buildTokenUrl() (uri string) {
+	if len(t.glcpWorkspaceId) > 0 {
+		t.log.Info("GLCP workspace ID provided, authenticating workspace based token request")
+		return fmt.Sprintf("%s/%s/%s/%s", t.glcpCloudUrl, GLCP_ACCESS_ENDPOINT_PREFIX, t.glcpWorkspaceId, GLCP_ACCESS_ENDPOINT_SUFFIX)
+	}
+	// TODO: Need to confirm with GLCP team if the legacy user is supported officially to use new endpoint. 
+	t.log.Info("No GLCP workspace ID provided, going with legacy authentication for token request")
+	return fmt.Sprintf("%s/%s", t.glcpCloudUrl, GLCP_ACCESS_TOKEN_URL)
+}
+
 // Creates a fresh bearer token for the GLCP API user
 func (t *token_service) GetAccessToken() (string, error) {
 	h := map[string]string{"Content-Type": APPLICATION_URL_ENCODED}
-	cloudUrl := fmt.Sprintf("%s/%s", t.glcpCloudUrl, GLCP_ACCESS_TOKEN_URL)
+	cloudUrl := t.buildTokenUrl()
 	if !strings.Contains(cloudUrl, "https") {
 		cloudUrl = "https://" + cloudUrl
 	}

@@ -956,7 +956,7 @@ func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName st
 
 		}
 	} else {
-		log.Info(fmt.Sprintf("S3 access policy %s, doesn't exist in DSCC", userName))
+		log.Info(fmt.Sprintf("S3 access policy %s, doesn't exist in DSCC", utils.MaskName(policyName)))
 	}
 	return nil
 

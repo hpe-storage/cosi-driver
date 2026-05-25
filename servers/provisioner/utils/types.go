@@ -417,3 +417,48 @@ func (r RetentionInterval) ToDaysYears() (days, years int, err error) {
 		"invalid RetentionInterval %q: unrecognised unit %q",
 		string(r), m[2])
 }
+
+// MaskName masks the UUID portion of a name (e.g. user_ba-edummy-forthe-sake-ofex-ampled918fa73)
+// keeping the prefix and last 4 characters visible, replacing the rest with 'x'.
+// Example: "user_ba-adummy-forthe-sake-ofex-mplein918fa73" -> "user_ba-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxfa73"
+func MaskName(name string) string {
+	// Find the first UUID-like pattern (8-4-4-4-12 hex chars)
+	uuidRe := regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
+	loc := uuidRe.FindStringIndex(name)
+	if loc == nil {
+		return name
+	}
+	uuid := name[loc[0]:loc[1]]
+	// Keep last 4 chars, mask the rest preserving dashes
+	masked := maskUUID(uuid)
+	return name[:loc[0]] + masked + name[loc[1]:]
+}
+
+func maskUUID(uuid string) string {
+	// UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
+	// Keep last 4 chars of the hex portion, mask rest with 'x'
+	runes := []rune(uuid)
+	hexCount := 0
+	totalHex := 0
+	for _, r := range runes {
+		if r != '-' {
+			totalHex++
+		}
+	}
+	visibleFromEnd := 4
+	maskCount := totalHex - visibleFromEnd
+	result := make([]rune, len(runes))
+	for i, r := range runes {
+		if r == '-' {
+			result[i] = '-'
+		} else {
+			hexCount++
+			if hexCount <= maskCount {
+				result[i] = 'x'
+			} else {
+				result[i] = r
+			}
+		}
+	}
+	return string(result)
+}

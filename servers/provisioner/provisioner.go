@@ -798,7 +798,7 @@ func createBucketAccess(ctx context.Context, userName, policyName, bucketName st
 	// Create S3 User
 	u := iam.NewS3User(userName, credentials.SystemId, client, ctx)
 
-	log.Info(fmt.Sprintf("Checking if s3 user %s, exists in DSCC", userName))
+	log.Info(fmt.Sprintf("Checking if s3 user %s, exists in DSCC", utils.MaskName(userName)))
 	exist, err := u.UserExists()
 	if err != nil {
 		log.Error(err, "error fetching user details from DSCC. Please verify the connectivity with DSCC, ", credentials.DSCCZone)
@@ -807,10 +807,10 @@ func createBucketAccess(ctx context.Context, userName, policyName, bucketName st
 
 	var secretKey string
 	if !exist {
-		log.Info(fmt.Sprintf("Creating s3 user %s, in DSCC", userName))
+		log.Info(fmt.Sprintf("Creating s3 user %s, in DSCC", utils.MaskName(userName)))
 		secretKey, err = u.CreateS3User()
 	} else {
-		log.Info(fmt.Sprintf("S3 user %s, is seen to be existing in DSCC, resetting password & reusing it for bucket access", userName))
+		log.Info(fmt.Sprintf("S3 user %s, is seen to be existing in DSCC, resetting password & reusing it for bucket access", utils.MaskName(userName)))
 		secretKey, err = u.ResetPassword()
 	}
 	if err != nil || len(secretKey) == 0 {
@@ -820,7 +820,7 @@ func createBucketAccess(ctx context.Context, userName, policyName, bucketName st
 	// Create S3 Access policy
 	p := iam.NewS3Policy(policyName, bucketName, credentials.SystemId, client, ctx)
 
-	log.Info(fmt.Sprintf("Checking if access policy %s, exists in DSCC", policyName))
+	log.Info(fmt.Sprintf("Checking if access policy %s, exists in DSCC", utils.MaskName(policyName)))
 	exist, err = p.PolicyExists()
 	if err != nil {
 		log.Error(err, "error fetching access policy details from DSCC. Please verify the connectivity with DSCC, ", credentials.DSCCZone)
@@ -828,7 +828,7 @@ func createBucketAccess(ctx context.Context, userName, policyName, bucketName st
 	}
 
 	if !exist {
-		log.Info(fmt.Sprintf("Creating access policy %s, in DSCC", policyName))
+		log.Info(fmt.Sprintf("Creating access policy %s, in DSCC", utils.MaskName(policyName)))
 		task, err := p.CreateS3AccessPolicy()
 		if task == nil && err != nil {
 			log.Error(err, "error while creating s3 access policy in DSCC.")
@@ -844,11 +844,11 @@ func createBucketAccess(ctx context.Context, userName, policyName, bucketName st
 
 		}
 	} else {
-		log.Info(fmt.Sprintf("Access policy %s, is seen to be existing in DSCC, reusing it for bucket access", policyName))
+		log.Info(fmt.Sprintf("Access policy %s, is seen to be existing in DSCC, reusing it for bucket access", utils.MaskName(policyName)))
 	}
 
 	// Applying access policy to S3 user
-	log.Info(fmt.Sprintf("Applying access policy %s to s3 user %s", policyName, userName))
+	log.Info(fmt.Sprintf("Applying access policy %s to s3 user %s", utils.MaskName(policyName), utils.MaskName(userName)))
 	task, err := u.ApplyPolicy([]string{policyName})
 	if task == nil && err != nil {
 		log.Error(err, "error while applying policy to user.")
@@ -902,7 +902,7 @@ func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName st
 
 	u := iam.NewS3User(userName, credentials.SystemId, client, ctx)
 
-	log.Info(fmt.Sprintf("Checking if s3 user %s, exists in DSCC", userName))
+	log.Info(fmt.Sprintf("Checking if s3 user %s, exists in DSCC", utils.MaskName(userName)))
 	exist, err := u.UserExists()
 	if err != nil {
 		log.Error(err, fmt.Sprintf("error fetching user details from DSCC %s. Please verify the connectivity with DSCC.", credentials.DSCCZone))
@@ -910,7 +910,7 @@ func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName st
 	}
 
 	if exist {
-		log.Info(fmt.Sprintf("Deleting S3 user %s", userName))
+		log.Info(fmt.Sprintf("Deleting S3 user %s", utils.MaskName(userName)))
 		task, err := u.DeleteS3User()
 		if task == nil && err != nil {
 			log.Error(err, "error while deleting s3 user.")
@@ -927,12 +927,12 @@ func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName st
 		}
 
 	} else {
-		log.Info(fmt.Sprintf("S3 user %s, doesn't exist in DSCC", userName))
+		log.Info(fmt.Sprintf("S3 user %s, doesn't exist in DSCC", utils.MaskName(userName)))
 	}
 
 	p := iam.NewS3Policy(policyName, bucketName, credentials.SystemId, client, ctx)
 
-	log.Info(fmt.Sprintf("Checking if s3 access policy %s, exists in DSCC", policyName))
+	log.Info(fmt.Sprintf("Checking if s3 access policy %s, exists in DSCC", utils.MaskName(policyName)))
 	exist, err = p.PolicyExists()
 	if err != nil {
 		log.Error(err, fmt.Sprintf("error fetching policy details from DSCC %s. Please verify the connectivity with DSCC.", credentials.DSCCZone))
@@ -940,7 +940,7 @@ func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName st
 	}
 
 	if exist {
-		log.Info(fmt.Sprintf("Deleting S3 access policy %s", userName))
+		log.Info(fmt.Sprintf("Deleting S3 access policy %s", utils.MaskName(policyName)))
 		task, err := p.DeleteS3AccessPolicy()
 		if task == nil && err != nil {
 			log.Error(err, "error while deleting s3 access policy.")
@@ -964,8 +964,8 @@ func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName st
 
 // Fetches a fresh bearer token to access DSCC, through GLCP
 func getAccessToken(credentials *utils.IAMCredentials, log *logr.Logger) (string, error) {
-	ts := iam.NewTokenService(credentials.GLCPCommonCloud, credentials.GLCPUser, credentials.GLCPUserSecretKey, credentials.GLCPWorkspaceId, 
-		  credentials.Proxy, credentials.OnPremCloudCA, log)
+	ts := iam.NewTokenService(credentials.GLCPCommonCloud, credentials.GLCPUser, credentials.GLCPUserSecretKey, credentials.GLCPWorkspaceId,
+		credentials.Proxy, credentials.OnPremCloudCA, log)
 	token, err := ts.GetAccessToken()
 	return token, err
 }

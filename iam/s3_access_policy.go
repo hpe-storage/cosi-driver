@@ -37,7 +37,7 @@ func NewS3Policy(policyName, bucketName, systemId string, client *sdk.APIClient,
 func (p *s3policy) GetS3AccessPolicy() (*sdk.AccessPolicy, error) {
 	ap, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7GetAccessPolicyById(p.context, p.systemId, p.name).Execute()
 	if err == nil && r.StatusCode != http.StatusOK {
-		err = fmt.Errorf("request failed while fetching s3 access policy %s, err : %v", p.name, r)
+		err = fmt.Errorf("request failed while fetching s3 access policy %s, err : %v", utils.MaskName(p.name), r)
 	}
 	return ap, err
 }
@@ -78,7 +78,7 @@ func (p *s3policy) CreateS3AccessPolicy() (*sdk.TaskResponseUi, error) {
 	taskUI, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7CreateAccessPolicy(p.context, p.systemId).
 		CreateAccessPolicyBody(createAccessPolicyBody).Execute()
 	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while creating s3 access policy %s, err: %v", p.name, r)
+		err = fmt.Errorf("request failed while creating s3 access policy %s, err: %v", utils.MaskName(p.name), r)
 	}
 	return taskUI, err
 }
@@ -92,7 +92,7 @@ func (p *s3policy) UpdateS3AccessPolicy() (*sdk.TaskResponseUi, error) {
 	taskUI, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7UpdateAccessPolicyById(p.context, p.systemId, p.name).
 		UpdateAccessPolicyBody(updateAccessPolicyBody).Execute()
 	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while updating s3 access policy %s, err: %v", p.name, r)
+		err = fmt.Errorf("request failed while updating s3 access policy %s, err: %v", utils.MaskName(p.name), r)
 	}
 	return taskUI, err
 }
@@ -104,7 +104,7 @@ func (p *s3policy) DeleteS3AccessPolicy() (*sdk.TaskResponseUi, error) {
 	taskUI, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7DeleteAccessPolicyById(p.context, p.systemId, p.name).Execute()
 
 	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while deleting s3 access policy %s, err: %v", p.name, r)
+		err = fmt.Errorf("request failed while deleting s3 access policy %s, err: %v", utils.MaskName(p.name), r)
 	}
 	return taskUI, err
 }

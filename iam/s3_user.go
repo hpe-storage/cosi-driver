@@ -77,11 +77,11 @@ func (u *s3user) CreateS3User() (string, error) {
 	if err != nil {
 		if r != nil {
 			_, body := getResponseErrorCode(u.context, r)
-			log.Error(err, "Failed to create S3 user in DSCC", "user", u.name, "statusCode", r.StatusCode, "status", r.Status, "response body", body)
+			log.Error(err, "Failed to create S3 user in DSCC", "user", utils.MaskName(u.name), "statusCode", r.StatusCode, "status", r.Status, "response body", body)
 		}
 		return "", err
 	} else if r.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("request failed while creating s3 user %s, err: %v", u.name, r)
+		return "", fmt.Errorf("request failed while creating s3 user %s, err: %v", utils.MaskName(u.name), r)
 	}
 	return resp.GetSecretKey(), nil
 }
@@ -95,7 +95,7 @@ func (u *s3user) ResetPassword() (string, error) {
 	if err != nil {
 		return "", err
 	} else if r.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("request failed while resetting s3 user %s password, err: %v", u.name, r)
+		return "", fmt.Errorf("request failed while resetting s3 user %s password, err: %v", utils.MaskName(u.name), r)
 	}
 	return resp.GetSecretKey(), nil
 }
@@ -108,7 +108,7 @@ func (u *s3user) ApplyPolicy(policies []string) (*sdk.TaskResponseUi, error) {
 
 	taskUI, r, err := u.client.ObjectstoreIdentitiesAPI.ApplyPolicy(u.context, u.systemId).ApplyPolicy(policy).Execute()
 	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while applying policies %v, to the user %s, err: %v", policies, u.name, r)
+		err = fmt.Errorf("request failed while applying policies %v, to the user %s, err: %v", policies, utils.MaskName(u.name), r)
 	}
 	return taskUI, err
 }
@@ -119,7 +119,7 @@ func (u *s3user) ApplyPolicy(policies []string) (*sdk.TaskResponseUi, error) {
 func (u *s3user) DeleteS3User() (*sdk.TaskResponseUi, error) {
 	taskUI, r, err := u.client.ObjectstoreIdentitiesAPI.DeviceType7DeleteUserById(u.context, u.systemId, u.name).Execute()
 	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while delete s3 user %s, err: %v", u.name, r)
+		err = fmt.Errorf("request failed while delete s3 user %s, err: %v", utils.MaskName(u.name), r)
 	}
 	return taskUI, err
 }

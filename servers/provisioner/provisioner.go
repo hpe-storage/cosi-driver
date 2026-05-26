@@ -165,12 +165,13 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 
 	// Get the bucket access name from the request
 	bucketAccessName := req.Name
+	maskedBucketAccessName := utils.MaskName(bucketAccessName)
 
 	if req.AuthenticationType != cosi.AuthenticationType_Key {
 		err := fmt.Errorf("%s authenticationType alone is supported by COSI driver", cosi.AuthenticationType_Key)
 		s.log.Error(err, "Unsupported authenticationType")
 		return &cosi.DriverGrantBucketAccessResponse{
-			AccountId:   bucketAccessName,
+			AccountId:   maskedBucketAccessName,
 			Credentials: nil,
 		}, utils.ToGRPCStatusError("Unsupported authenticationType", err)
 	}
@@ -186,7 +187,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 		eMsg = "error while retrieving details of secret used in bucket access class"
 		s.log.Error(err, eMsg)
 		return &cosi.DriverGrantBucketAccessResponse{
-			AccountId:   bucketAccessName,
+			AccountId:   maskedBucketAccessName,
 			Credentials: nil,
 		}, utils.ToGRPCStatusError(eMsg, err)
 	}
@@ -196,7 +197,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 		eMsg = fmt.Sprintf("error while fetching secret %s used in bucket access class", name)
 		s.log.Error(err, eMsg)
 		return &cosi.DriverGrantBucketAccessResponse{
-			AccountId:   bucketAccessName,
+			AccountId:   maskedBucketAccessName,
 			Credentials: nil,
 		}, utils.ToGRPCStatusError(eMsg, err)
 	}
@@ -206,7 +207,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 		eMsg = fmt.Sprintf("error while creating access for bucket %s", bucketName)
 		s.log.Error(err, eMsg)
 		return &cosi.DriverGrantBucketAccessResponse{
-			AccountId:   bucketAccessName,
+			AccountId:   maskedBucketAccessName,
 			Credentials: nil,
 		}, utils.ToGRPCStatusError(eMsg, err)
 	}
@@ -226,7 +227,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 	credMap["s3"] = cred
 
 	return &cosi.DriverGrantBucketAccessResponse{
-		AccountId:   bucketAccessName,
+		AccountId:   maskedBucketAccessName,
 		Credentials: credMap,
 	}, status.Error(codes.OK, "Bucket access grant successfully completed")
 }
@@ -243,7 +244,8 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, req *cosi.DriverR
 	policyName := utils.ACCESS_POLICY_PREFIX + accessName
 	var eMsg string
 
-	s.log.Info(fmt.Sprintf("BucketName %s, AccountId %s", bucketName, accessName))
+	maskedAccessName := utils.MaskName(accessName)
+	s.log.Info(fmt.Sprintf("BucketName %s, AccountId %s", bucketName, maskedAccessName))
 	// Get the bucket object
 	bucket, err := s.BucketClientset.ObjectstorageV1alpha1().Buckets().Get(ctx, bucketName, metav1.GetOptions{})
 	if err != nil {
@@ -266,6 +268,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, req *cosi.DriverR
 	secret, err := getSecret(s.K8sClientset, ctx, name, namespace)
 	if err != nil || secret == nil || secret.Data == nil || len(secret.Data) == 0 {
 		eMsg = fmt.Sprintf("error while fetching secret %s used in bucket access class", name)
+		s.log.Error(err, eMsg)
 		return &cosi.DriverRevokeBucketAccessResponse{}, utils.ToGRPCStatusError(eMsg, err)
 	}
 
@@ -706,8 +709,7 @@ func getSecret(client *kubernetes.Clientset, ctx context.Context, name, namespac
 
 // Retrieves the GLCP credentials(required to communicate with DSCC) from the passed secret data
 // returns error, if any of the necessary credentials are missing in the passed secret data
-func getGLCPCDetails(ctx context.Context, data map[string][]byte) (*utils.IAMCredentials, error) {
-	log := utils.GetLoggerFromContext(ctx)
+func getGLCPCDetails(data map[string][]byte) (*utils.IAMCredentials, error) {
 	getData := func(key string) (str string, err error) {
 		if val, ok := data[key]; ok {
 			str = string(val)[:]
@@ -733,8 +735,7 @@ func getGLCPCDetails(ctx context.Context, data map[string][]byte) (*utils.IAMCre
 	}
 	glcpWorkspaceId, err := getData(utils.GLCP_WORKSPACE_ID)
 	if err != nil {
-		//TODO: Need to confirm with GLCP team & entirly move to new Auth by making this field mandatory.
-		log.Info("unable to fetch GLCP workspace ID from the mounted secret")
+		return nil, err
 	}
 	dsccZone, err := getData(utils.DSCC_ZONE)
 	if err != nil {
@@ -769,7 +770,7 @@ func getGLCPCDetails(ctx context.Context, data map[string][]byte) (*utils.IAMCre
 // returns an error when S3 user,policy creation fails in DSCC
 func createBucketAccess(ctx context.Context, userName, policyName, bucketName string, data map[string][]byte) (string, string, error) {
 	log := utils.GetLoggerFromContext(ctx)
-	credentials, err := getGLCPCDetails(ctx, data)
+	credentials, err := getGLCPCDetails(data)
 	if err != nil {
 		return "", "", err
 	}
@@ -871,7 +872,7 @@ func createBucketAccess(ctx context.Context, userName, policyName, bucketName st
 func deleteBucketAccess(ctx context.Context, userName, policyName, bucketName string, data map[string][]byte) error {
 	log := utils.GetLoggerFromContext(ctx)
 
-	credentials, err := getGLCPCDetails(ctx, data)
+	credentials, err := getGLCPCDetails(data)
 	if err != nil {
 		return err
 	}

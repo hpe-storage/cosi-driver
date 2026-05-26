@@ -407,3 +407,90 @@ func TestBucketRequest_WirePayload(t *testing.T) {
 		}
 	})
 }
+
+func TestMaskName(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "typical user name with UUID",
+			input: "user_ba-edummy-forthe-sake-ofex-ampled918fa73",
+			want:  "usxx_xx-xxxxxx-xxxxxx-xxxx-xxxx-xxxxxxxxxfa73",
+		},
+		{
+			name:  "short string exactly 4 chars",
+			input: "abcd",
+			want:  "xxxd",
+		},
+		{
+			name:  "5 chars masks all but last",
+			input: "abcde",
+			want:  "xxxxe",
+		},
+		{
+			name:  "6 chars masks all but last",
+			input: "abcdef",
+			want:  "xxxxxf",
+		},
+		{
+			name:  "7 chars keeps first 2 and last 4",
+			input: "abcdefg",
+			want:  "abxdefg",
+		},
+		{
+			name:  "short string 3 chars",
+			input: "abc",
+			want:  "xxc",
+		},
+		{
+			name:  "short string 2 chars",
+			input: "ab",
+			want:  "xb",
+		},
+		{
+			name:  "single char",
+			input: "a",
+			want:  "a",
+		},
+		{
+			name:  "preserves hyphens in long string",
+			input: "a-b-c-d-e",
+			want:  "a-x-x-d-e",
+		},
+		{
+			name:  "preserves underscores in long string",
+			input: "a_b_c_d_e",
+			want:  "a_x_x_d_e",
+		},
+		{
+			name:  "prefix with underscore",
+			input: "acp_12345678",
+			want:  "acx_xxxx5678",
+		},
+		{
+			name:  "all hyphens preserved",
+			input: "aa----bb",
+			want:  "aa----bb",
+		},
+		{
+			name:  "numeric string",
+			input: "1234567890",
+			want:  "12xxxx7890",
+		},
+		{
+			name:  "empty string",
+			input: "",
+			want:  "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := MaskName(tt.input)
+			if got != tt.want {
+				t.Errorf("MaskName(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}

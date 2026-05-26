@@ -491,6 +491,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 	patches.ApplyMethodReturn(coreV1, "Secrets", secretInt)
 	log := stdr.New(stdlog.New(os.Stdout, "", stdlog.LstdFlags))
 	accessName := "bucket1_user"
+	maskedAccessName := utils.MaskName(accessName)
 	bucketName := "bucket1"
 	policy := iam.NewS3Policy(utils.ACCESS_POLICY_PREFIX+accessName, bucketName, systemId, nil, context.Background())
 	user := iam.NewS3User(utils.USER_PREFIX+accessName, systemId, nil, context.Background())
@@ -498,6 +499,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 	removeSecretData := func(remField string) *v1.Secret {
 		data := map[string][]byte{utils.GLCP_USER_CLIENTID: []byte(glcpCreds.GLCPUser),
 			utils.GLCP_USER_SECRET_KEY: []byte(glcpCreds.GLCPUserSecretKey),
+			utils.GLCP_WORKSPACE_ID:    []byte(glcpCreds.GLCPWorkspaceId),
 			utils.DSCC_ZONE:            []byte(glcpCreds.DSCCZone),
 			utils.ALLETRA_MP_X10K_SNO:  []byte(glcpCreds.SystemId),
 		}
@@ -532,7 +534,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 				Credentials: map[string]*cosi.CredentialDetails{
 					"s3": {Secrets: map[string]string{
 						"accessKeyID":     "user_bucket1_user",
@@ -577,7 +579,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				p := gomonkey.ApplyFuncReturn(getSecret, nil, errors.New("failed to get secret"))
@@ -600,7 +602,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				return nil
@@ -626,7 +628,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				p := gomonkey.ApplyFuncReturn(getSecret, removeSecretData(utils.GLCP_USER_CLIENTID), nil)
@@ -654,7 +656,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				p := gomonkey.ApplyFuncReturn(getSecret, removeSecretData(utils.GLCP_USER_SECRET_KEY), nil)
@@ -682,7 +684,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				p := gomonkey.ApplyFuncReturn(getSecret, removeSecretData(utils.DSCC_ZONE), nil)
@@ -710,7 +712,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				p := gomonkey.ApplyFuncReturn(getSecret, removeSecretData(utils.ALLETRA_MP_X10K_SNO), nil)
@@ -738,7 +740,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				p := gomonkey.ApplyFuncReturn(getSecret, secret, nil)
@@ -765,7 +767,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				p := gomonkey.ApplyFuncReturn(getSecret, secret, nil)
@@ -794,7 +796,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				p := gomonkey.ApplyFuncReturn(getSecret, secret, nil)
@@ -823,7 +825,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				apiClient := iam.NewAPIClient("us1.xxxx.xxxxx.hpe.com", "dummytoken", "", "")
@@ -855,7 +857,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: accessName,
+				AccountId: maskedAccessName,
 			},
 			setupPatches: func() *gomonkey.Patches {
 				apiClient := iam.NewAPIClient("us1.xxxx.xxxxx.hpe.com", "dummytoken", "", "")
@@ -917,6 +919,7 @@ func TestDriverRevokeBucketAccess(t *testing.T) {
 	removeSecretData := func(remField string) *v1.Secret {
 		data := map[string][]byte{utils.GLCP_USER_CLIENTID: []byte(glcpCreds.GLCPUser),
 			utils.GLCP_USER_SECRET_KEY: []byte(glcpCreds.GLCPUserSecretKey),
+			utils.GLCP_WORKSPACE_ID:    []byte(glcpCreds.GLCPWorkspaceId),
 			utils.DSCC_ZONE:            []byte(glcpCreds.DSCCZone),
 			utils.ALLETRA_MP_X10K_SNO:  []byte(glcpCreds.SystemId),
 		}
@@ -1535,6 +1538,7 @@ func createSecret(secretName string, namespace string, accessKey []byte, secretK
 	if glcpCreds != nil {
 		secret.Data[utils.GLCP_USER_CLIENTID] = []byte(glcpCreds.GLCPUser)
 		secret.Data[utils.GLCP_USER_SECRET_KEY] = []byte(glcpCreds.GLCPUserSecretKey)
+		secret.Data[utils.GLCP_WORKSPACE_ID] = []byte(glcpCreds.GLCPWorkspaceId)
 		secret.Data[utils.DSCC_ZONE] = []byte(glcpCreds.DSCCZone)
 		secret.Data[utils.ALLETRA_MP_X10K_SNO] = []byte(glcpCreds.SystemId)
 	}
@@ -1545,6 +1549,7 @@ func getIAMCredentials() utils.IAMCredentials {
 	return utils.IAMCredentials{
 		GLCPUser:          "xxxxxxx-xxx-123-3456",
 		GLCPUserSecretKey: "zzzzzrandomxxxxxxzzzzz",
+		GLCPWorkspaceId:   "dummy-workspace-id",
 		DSCCZone:          "us1.xxxx.xxxxx.hpe.com",
 		SystemId:          "DUMMY_SERIAL_NUMBER",
 	}

@@ -60,8 +60,8 @@ func (u *s3user) UserExists() (bool, error) {
 				" secret, and GLCP_COMMON_CLOUD in COSI pod",
 				"response body", body)
 			return false, err
-		}else{
-		    log.Error(err, "Received error while fetching user details from DSCC.", "statusCode", r.StatusCode, "status", r.Status, "response body", body)	
+		} else {
+			log.Error(err, "Received error while fetching user details from DSCC.", "statusCode", r.StatusCode, "status", r.Status, "response body", body)
 		}
 	}
 	return false, err

@@ -178,18 +178,11 @@ func Test_GetAccessToken_WithCA(t *testing.T) {
 
 func Test_buildTokenUrl(t *testing.T) {
 	log := stdr.New(stdlog.New(os.Stdout, "", stdlog.LstdFlags))
-    autUri := "https://sso.cloud.example.com"
+	autUri := "https://sso.cloud.example.com"
 	t.Run("buildTokenUrl with workspace ID", func(t *testing.T) {
 		ts := NewTokenService(autUri, "client-id", "client-secret", "workspace-1234", "", "", &log)
 		uri := ts.buildTokenUrl()
 		expected := autUri + "/authorization/v2/oauth2/workspace-1234/token"
-		assert.Equal(t, uri, expected)
-	})
-
-	t.Run("buildTokenUrl without workspace ID (legacy)", func(t *testing.T) {
-		ts := NewTokenService(autUri, "client-id", "client-secret", "", "", "", &log)
-		uri := ts.buildTokenUrl()
-		expected := autUri + "/as/token.oauth2"
 		assert.Equal(t, uri, expected)
 	})
 }

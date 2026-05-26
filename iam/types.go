@@ -8,7 +8,6 @@ import (
 
 var (
 	ACCESS_GRANT_TYPE           = "client_credentials"
-	GLCP_ACCESS_TOKEN_URL       = "as/token.oauth2"
 	GLCP_ACCESS_ENDPOINT_PREFIX = "authorization/v2/oauth2"
 	GLCP_ACCESS_ENDPOINT_SUFFIX = "token"
 	HTTP_REQUEST_TIMEOUT        = 30 * time.Second
@@ -66,6 +65,6 @@ const (
 type HttpErrorCode string
 
 const (
-	ERR_RESOURCE_NOT_FOUND HttpErrorCode = "ERR_RESOURCE_NOT_FOUND"
+	ERR_RESOURCE_NOT_FOUND   HttpErrorCode = "ERR_RESOURCE_NOT_FOUND"
 	DOWNSTREAM_SERVICE_ERROR HttpErrorCode = "DOWNSTREAM_SERVICE_ERROR"
 )

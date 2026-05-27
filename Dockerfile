@@ -33,7 +33,7 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1742914212
 LABEL name="HPE COSI Driver for Kubernetes" \
     maintainer="HPE Storage" \
     vendor="HPE" \
-    version="1.0.0" \
+    version="2.0.0" \
     summary="HPE COSI Driver for Kubernetes" \
     description="The HPE COSI Driver for Kubernetes enables container orchestrators to manage the life-cycle of object storage resources." \
     io.k8s.display-name="HPE COSI Driver for Kubernetes" \
@@ -41,6 +41,11 @@ LABEL name="HPE COSI Driver for Kubernetes" \
 
 COPY LICENSE /licenses/
 
+RUN echo "cosi-driver:x:1000:1000::/home/cosi-driver:/sbin/nologin" >> /etc/passwd && \
+    echo "cosi-driver:x:1000:" >> /etc/group
+
 COPY --from=build /usr/src/hpe-cosi-driver/bin/cosi-driver cosi-driver
+
+USER 1000:1000
 
 ENTRYPOINT ["/cosi-driver"]

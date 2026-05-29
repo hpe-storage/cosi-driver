@@ -35,9 +35,16 @@ func NewS3Policy(policyName, bucketName, systemId string, client *sdk.APIClient,
 
 // Returns the access policy by name(passed with s3policy instance)
 func (p *s3policy) GetS3AccessPolicy() (*sdk.AccessPolicy, error) {
+	maskedName := utils.MaskName(p.name)
 	ap, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7GetAccessPolicyById(p.context, p.systemId, p.name).Execute()
-	if err == nil && r.StatusCode != http.StatusOK {
-		err = fmt.Errorf("request failed while fetching s3 access policy %s, err : %v", utils.MaskName(p.name), r)
+	if err != nil {
+		if r != nil && r.StatusCode == http.StatusNotFound {
+			return ap, err
+		}
+		return ap, utils.FormatIAMError(fmt.Sprintf("failed to fetch s3 access policy %s", maskedName), err)
+	}
+	if r.StatusCode != http.StatusOK {
+		err = fmt.Errorf("failed to fetch s3 access policy %s (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return ap, err
 }
@@ -47,7 +54,7 @@ func (p *s3policy) PolicyExists() (bool, error) {
 	log := utils.GetLoggerFromContext(p.context)
 	ap, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7GetAccessPolicyById(p.context, p.systemId, p.name).Execute()
 	if err != nil && r != nil && r.StatusCode == http.StatusNotFound {
-		e, body := getResponseErrorCode(p.context, r)
+		e, body := getResponseErrorCode(r)
 		if e.GetErrorCode() == string(ERR_RESOURCE_NOT_FOUND) {
 			return false, nil
 		}
@@ -71,14 +78,18 @@ func (p *s3policy) PolicyHasFullBucketAccess() (bool, error) {
 // Creates an access policy with the passed name in DSCC
 // returns the task details created for this process
 func (p *s3policy) CreateS3AccessPolicy() (*sdk.TaskResponseUi, error) {
+	maskedName := utils.MaskName(p.name)
 
 	policyStatement := p.formFullAccessRuleForBucket()
 
 	createAccessPolicyBody := *sdk.NewCreateAccessPolicyBody(p.name, []sdk.PolicyStatementInput{policyStatement}, DSCC_POLICY_VERSION)
 	taskUI, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7CreateAccessPolicy(p.context, p.systemId).
 		CreateAccessPolicyBody(createAccessPolicyBody).Execute()
-	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while creating s3 access policy %s, err: %v", utils.MaskName(p.name), r)
+	if err != nil {
+		return taskUI, utils.FormatIAMError(fmt.Sprintf("failed to create s3 access policy %s", maskedName), err)
+	}
+	if r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED) {
+		err = fmt.Errorf("failed to create s3 access policy %s (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return taskUI, err
 }
@@ -87,12 +98,16 @@ func (p *s3policy) CreateS3AccessPolicy() (*sdk.TaskResponseUi, error) {
 // returns the task details created for this process
 // returns an error, if the policy is not existing under DSCC
 func (p *s3policy) UpdateS3AccessPolicy() (*sdk.TaskResponseUi, error) {
+	maskedName := utils.MaskName(p.name)
 	policyStatement := p.formFullAccessRuleForBucket()
 	updateAccessPolicyBody := *sdk.NewUpdateAccessPolicyBody([]sdk.PolicyStatementInput{policyStatement}, DSCC_POLICY_VERSION)
 	taskUI, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7UpdateAccessPolicyById(p.context, p.systemId, p.name).
 		UpdateAccessPolicyBody(updateAccessPolicyBody).Execute()
-	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while updating s3 access policy %s, err: %v", utils.MaskName(p.name), r)
+	if err != nil {
+		return taskUI, utils.FormatIAMError(fmt.Sprintf("failed to update s3 access policy %s", maskedName), err)
+	}
+	if r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED) {
+		err = fmt.Errorf("failed to update s3 access policy %s (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return taskUI, err
 }
@@ -101,10 +116,14 @@ func (p *s3policy) UpdateS3AccessPolicy() (*sdk.TaskResponseUi, error) {
 // returns the task details created for this process
 // returns an error, if the policy is not existing under DSCC
 func (p *s3policy) DeleteS3AccessPolicy() (*sdk.TaskResponseUi, error) {
+	maskedName := utils.MaskName(p.name)
 	taskUI, r, err := p.client.ObjectstoreIdentitiesAPI.DeviceType7DeleteAccessPolicyById(p.context, p.systemId, p.name).Execute()
 
-	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while deleting s3 access policy %s, err: %v", utils.MaskName(p.name), r)
+	if err != nil {
+		return taskUI, utils.FormatIAMError(fmt.Sprintf("failed to delete s3 access policy %s", maskedName), err)
+	}
+	if r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED) {
+		err = fmt.Errorf("failed to delete s3 access policy %s (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return taskUI, err
 }

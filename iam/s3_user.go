@@ -32,9 +32,13 @@ func NewS3User(userName, systemId string, client *sdk.APIClient, context context
 
 // Returns the access policy by name(passed with s3policy instance)
 func (u *s3user) GetS3User() (*sdk.UserListDetails, error) {
+	maskedName := utils.MaskName(u.name)
 	user, r, err := u.client.ObjectstoreIdentitiesAPI.DeviceType7GetSingleUser(u.context, u.systemId, u.name).Execute()
-	if err == nil && r.StatusCode != http.StatusOK {
-		err = fmt.Errorf("request failed while fetching s3 user %s, err: %v", u.name, r)
+	if err != nil {
+		return user, utils.FormatIAMError(fmt.Sprintf("failed to fetch s3 user %s", maskedName), err)
+	}
+	if r.StatusCode != http.StatusOK {
+		err = fmt.Errorf("failed to fetch s3 user %s (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return user, err
 }
@@ -44,7 +48,7 @@ func (u *s3user) UserExists() (bool, error) {
 	log := utils.GetLoggerFromContext(u.context)
 	ap, r, err := u.client.ObjectstoreIdentitiesAPI.DeviceType7GetSingleUser(u.context, u.systemId, u.name).Execute()
 	if err != nil && r != nil && r.StatusCode == http.StatusNotFound {
-		e, body := getResponseErrorCode(u.context, r)
+		e, body := getResponseErrorCode(r)
 		if e.GetErrorCode() == string(ERR_RESOURCE_NOT_FOUND) {
 			return false, nil
 		}
@@ -53,7 +57,7 @@ func (u *s3user) UserExists() (bool, error) {
 	} else if ap != nil && err == nil {
 		return true, nil
 	} else if r != nil {
-		e, body := getResponseErrorCode(u.context, r)
+		e, body := getResponseErrorCode(r)
 		if e.GetErrorCode() == string(DOWNSTREAM_SERVICE_ERROR) {
 			log.Error(err, "Downstream service error from DSCC;"+
 				" verify GLCP credentials, workspace in mounted"+
@@ -70,18 +74,14 @@ func (u *s3user) UserExists() (bool, error) {
 // Creates a user with the passed name in DSCC
 // returns the new secret key of the user
 func (u *s3user) CreateS3User() (string, error) {
-	log := utils.GetLoggerFromContext(u.context)
+	maskedName := utils.MaskName(u.name)
 	userDetails := *sdk.NewUserDetails(u.name)
 	resp, r, err := u.client.ObjectstoreIdentitiesAPI.DeviceType7CreateUser(u.context, u.systemId).
 		UserDetails(userDetails).Execute()
 	if err != nil {
-		if r != nil {
-			_, body := getResponseErrorCode(u.context, r)
-			log.Error(err, "Failed to create S3 user in DSCC", "user", utils.MaskName(u.name), "statusCode", r.StatusCode, "status", r.Status, "response body", body)
-		}
-		return "", err
+		return "", utils.FormatIAMError(fmt.Sprintf("failed to create s3 user %s", maskedName), err)
 	} else if r.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("request failed while creating s3 user %s, err: %v", utils.MaskName(u.name), r)
+		return "", fmt.Errorf("failed to create s3 user %s (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return resp.GetSecretKey(), nil
 }
@@ -90,12 +90,13 @@ func (u *s3user) CreateS3User() (string, error) {
 // returns the new secret key of the user
 // returns an error, if the user is not existing under DSCC
 func (u *s3user) ResetPassword() (string, error) {
+	maskedName := utils.MaskName(u.name)
 	userDetails := *sdk.NewUserDetailsEdit(true)
 	resp, r, err := u.client.ObjectstoreIdentitiesAPI.DeviceType7EditUser(u.context, u.systemId, u.name).UserDetailsEdit(userDetails).Execute()
 	if err != nil {
-		return "", err
+		return "", utils.FormatIAMError(fmt.Sprintf("failed to reset s3 user %s password", maskedName), err)
 	} else if r.StatusCode != http.StatusCreated {
-		return "", fmt.Errorf("request failed while resetting s3 user %s password, err: %v", utils.MaskName(u.name), r)
+		return "", fmt.Errorf("failed to reset s3 user %s password (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return resp.GetSecretKey(), nil
 }
@@ -104,11 +105,15 @@ func (u *s3user) ResetPassword() (string, error) {
 // returns the task details created for this process
 // returns an error, if the user or policy is not existing under DSCC
 func (u *s3user) ApplyPolicy(policies []string) (*sdk.TaskResponseUi, error) {
+	maskedName := utils.MaskName(u.name)
 	policy := *sdk.NewApplyPolicy(u.name, policies, string(USER))
 
 	taskUI, r, err := u.client.ObjectstoreIdentitiesAPI.ApplyPolicy(u.context, u.systemId).ApplyPolicy(policy).Execute()
-	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while applying policies %v, to the user %s, err: %v", policies, utils.MaskName(u.name), r)
+	if err != nil {
+		return taskUI, utils.FormatIAMError(fmt.Sprintf("failed to apply policies to user %s", maskedName), err)
+	}
+	if r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED) {
+		err = fmt.Errorf("failed to apply policies to user %s (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return taskUI, err
 }
@@ -117,25 +122,36 @@ func (u *s3user) ApplyPolicy(policies []string) (*sdk.TaskResponseUi, error) {
 // returns the task details created for this process
 // returns an error, if the user is not existing under DSCC
 func (u *s3user) DeleteS3User() (*sdk.TaskResponseUi, error) {
+	maskedName := utils.MaskName(u.name)
 	taskUI, r, err := u.client.ObjectstoreIdentitiesAPI.DeviceType7DeleteUserById(u.context, u.systemId, u.name).Execute()
-	if err == nil && (r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED)) {
-		err = fmt.Errorf("request failed while delete s3 user %s, err: %v", utils.MaskName(u.name), r)
+	if err != nil {
+		return taskUI, utils.FormatIAMError(fmt.Sprintf("failed to delete s3 user %s", maskedName), err)
+	}
+	if r.StatusCode != http.StatusAccepted || taskUI.GetStatus() != string(SUBMITTED) {
+		err = fmt.Errorf("failed to delete s3 user %s (HTTP %d): %s", maskedName, r.StatusCode, readResponseBody(r))
 	}
 	return taskUI, err
 }
 
-func getResponseErrorCode(ctx context.Context, r *http.Response) (sdk.InternalErrorResponseUi, string) {
-	log := utils.GetLoggerFromContext(ctx)
+// readResponseBody reads the HTTP response body and returns a parsed,
+// human-readable error string using ParseIAMErrorResponse.
+// Returns an empty string if the body cannot be read.
+func readResponseBody(r *http.Response) string {
+	if r == nil || r.Body == nil {
+		return ""
+	}
+	_, body := getResponseErrorCode(r)
+	return body
+}
+
+func getResponseErrorCode(r *http.Response) (sdk.InternalErrorResponseUi, string) {
 	var b sdk.InternalErrorResponseUi
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Error(err, "Unable to retrieve body from http response")
+	if err != nil || len(body) == 0 {
 		return b, ""
 	}
-	if err = json.Unmarshal(body, &b); err != nil {
-		log.Error(err, "Failed to unmarshal body from, %s", string(body)[:])
-		return b, string(body)[:]
-	}
-	return b, string(body)[:]
+	// Best-effort unmarshal into structured error; ignore failures
+	_ = json.Unmarshal(body, &b)
+	return b, utils.ParseIAMErrorResponse(body)
 }

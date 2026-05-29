@@ -98,7 +98,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateB
 
 	// Attempt bucket creation (idempotent: handle "already exists" inside CreateBucket)
 	if err = s3c.CreateBucket(ctx, bucketName, bucketReq); err != nil {
-		return nil, utils.ToGRPCStatusError("failed to create bucket", err)
+		return nil, utils.ToGRPCStatusError("Bucket creation failed", err)
 	}
 
 	// If locking is enabled, set object lock configuration
@@ -106,7 +106,7 @@ func (s *Server) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateB
 		err = s3c.SetObjectLockConfiguration(ctx, bucketName, string(bucketReq.Locking), string(bucketReq.RetentionMode), bucketReq.ObjectLockDays, bucketReq.ObjectLockYears)
 		if err != nil {
 			s.log.Error(err, "failed to set object lock configuration")
-			return nil, utils.ToGRPCStatusError("failed to set object lock configuration", err)
+			return nil, utils.ToGRPCStatusError("Bucket object lock configuration failed", err)
 		}
 	}
 
@@ -115,13 +115,13 @@ func (s *Server) DriverCreateBucket(ctx context.Context, req *cosi.DriverCreateB
 		err = s3c.PutBucketTagging(ctx, bucketName, tags)
 		if err != nil {
 			s.log.Error(err, "failed to set bucket tags")
-			return nil, utils.ToGRPCStatusError("failed to set bucket tags", err)
+			return nil, utils.ToGRPCStatusError("Bucket tagging failed", err)
 		}
 	}
 
 	return &cosi.DriverCreateBucketResponse{
 		BucketId: bucketName,
-	}, status.Error(codes.OK, "Bucket creation successfully completed")
+	}, status.Error(codes.OK, fmt.Sprintf("Bucket '%s' created successfully", bucketName))
 }
 
 // DriverDeleteBucket handles the deletion of a bucket in the backend.
@@ -137,7 +137,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context, req *cosi.DriverDeleteB
 	bucket, err := s.BucketClientset.ObjectstorageV1alpha1().Buckets().Get(ctx, bucketName, metav1.GetOptions{})
 	if err != nil {
 		s.log.Error(err, "failed to get bucket object", "bucketName", bucketName)
-		return nil, utils.ToGRPCStatusError(fmt.Sprintf("failed to get bucket: %s", bucketName), err)
+		return nil, utils.ToGRPCStatusError(fmt.Sprintf("Bucket deletion failed: unable to get bucket '%s'", bucketName), err)
 	}
 	// Get the parameters from the spec of the bucket
 	param := bucket.Spec.Parameters
@@ -150,10 +150,10 @@ func (s *Server) DriverDeleteBucket(ctx context.Context, req *cosi.DriverDeleteB
 
 	// Attempt bucket deletion
 	if err = s3c.DeleteBucket(ctx, bucketName); err != nil {
-		return nil, utils.ToGRPCStatusError("failed to delete bucket", err)
+		return nil, utils.ToGRPCStatusError("Bucket deletion failed", err)
 	}
 
-	return &cosi.DriverDeleteBucketResponse{}, status.Error(codes.OK, "Bucket deletion successfully completed")
+	return &cosi.DriverDeleteBucketResponse{}, status.Error(codes.OK, fmt.Sprintf("Bucket '%s' deleted successfully", bucketName))
 }
 
 // DriverGrantBucketAccess grants access to a bucket for a specific account.
@@ -173,7 +173,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 		return &cosi.DriverGrantBucketAccessResponse{
 			AccountId:   maskedBucketAccessName,
 			Credentials: nil,
-		}, utils.ToGRPCStatusError("Unsupported authenticationType", err)
+		}, utils.ToGRPCStatusError("Bucket access grant failed: unsupported authenticationType", err)
 	}
 
 	param := req.Parameters
@@ -184,7 +184,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 	name, namespace, err := getSecretNameAndNamespace(ctx, param)
 
 	if err != nil {
-		eMsg = "error while retrieving details of secret used in bucket access class"
+		eMsg = "Bucket access grant failed: unable to retrieve secret details from BucketAccessClass"
 		s.log.Error(err, eMsg)
 		return &cosi.DriverGrantBucketAccessResponse{
 			AccountId:   maskedBucketAccessName,
@@ -194,7 +194,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 
 	secret, err := getSecret(s.K8sClientset, ctx, name, namespace)
 	if err != nil || secret == nil || secret.Data == nil || len(secret.Data) == 0 {
-		eMsg = fmt.Sprintf("error while fetching secret %s used in bucket access class", name)
+		eMsg = fmt.Sprintf("Bucket access grant failed: unable to fetch secret '%s'", name)
 		s.log.Error(err, eMsg)
 		return &cosi.DriverGrantBucketAccessResponse{
 			AccountId:   maskedBucketAccessName,
@@ -204,7 +204,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 
 	secretKey, endpoint, err := createBucketAccess(ctx, userName, policyName, bucketName, secret.Data)
 	if err != nil {
-		eMsg = fmt.Sprintf("error while creating access for bucket %s", bucketName)
+		eMsg = fmt.Sprintf("Bucket access grant failed for bucket '%s'", bucketName)
 		s.log.Error(err, eMsg)
 		return &cosi.DriverGrantBucketAccessResponse{
 			AccountId:   maskedBucketAccessName,
@@ -229,7 +229,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 	return &cosi.DriverGrantBucketAccessResponse{
 		AccountId:   maskedBucketAccessName,
 		Credentials: credMap,
-	}, status.Error(codes.OK, "Bucket access grant successfully completed")
+	}, status.Error(codes.OK, fmt.Sprintf("Bucket access granted successfully for '%s' on bucket '%s'", bucketAccessName, bucketName))
 }
 
 // DriverRevokeBucketAccess revokes all access to a bucket for a specific account.
@@ -250,7 +250,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, req *cosi.DriverR
 	bucket, err := s.BucketClientset.ObjectstorageV1alpha1().Buckets().Get(ctx, bucketName, metav1.GetOptions{})
 	if err != nil {
 		s.log.Error(err, "failed to get bucket object", "bucketName", bucketName)
-		return nil, utils.ToGRPCStatusError(fmt.Sprintf("failed to get details from bucket: %s", bucketName), err)
+		return nil, utils.ToGRPCStatusError(fmt.Sprintf("Bucket access revoke failed: unable to get bucket '%s'", bucketName), err)
 	}
 
 	// TODO: This is for time being, until side-car & driver is patched to receive parameters along with the access revoke request
@@ -260,25 +260,24 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, req *cosi.DriverR
 	name, namespace, err := getSecretNameAndNamespace(ctx, param)
 
 	if err != nil {
-		eMsg = "error while retrieving details of secret used in bucket access class"
+		eMsg = "Bucket access revoke failed: unable to retrieve secret details from BucketAccessClass"
 		s.log.Error(err, eMsg)
 		return &cosi.DriverRevokeBucketAccessResponse{}, utils.ToGRPCStatusError(eMsg, err)
 	}
 
 	secret, err := getSecret(s.K8sClientset, ctx, name, namespace)
 	if err != nil || secret == nil || secret.Data == nil || len(secret.Data) == 0 {
-		eMsg = fmt.Sprintf("error while fetching secret %s used in bucket access class", name)
-		s.log.Error(err, eMsg)
+		eMsg = fmt.Sprintf("Bucket access revoke failed: unable to fetch secret '%s'", name)
 		return &cosi.DriverRevokeBucketAccessResponse{}, utils.ToGRPCStatusError(eMsg, err)
 	}
 
 	if err = deleteBucketAccess(ctx, userName, policyName, bucketName, secret.Data); err != nil {
-		eMsg = fmt.Sprintf("error while deleting access for bucket %s", bucketName)
+		eMsg = fmt.Sprintf("Bucket access revoke failed for bucket '%s'", bucketName)
 		s.log.Error(err, eMsg)
 		return &cosi.DriverRevokeBucketAccessResponse{}, utils.ToGRPCStatusError(eMsg, err)
 	}
 
-	return &cosi.DriverRevokeBucketAccessResponse{}, status.Error(codes.OK, "Bucket access revoke successfully completed")
+	return &cosi.DriverRevokeBucketAccessResponse{}, status.Error(codes.OK, fmt.Sprintf("Bucket access revoked successfully for '%s' on bucket '%s'", accessName, bucketName))
 
 }
 
@@ -336,7 +335,7 @@ func (c *S3Client) CreateBucket(ctx context.Context, bucketName string, req util
 		if logger.GetSink() != nil {
 			logger.Error(fmt.Errorf("unexpected status code: %d", resp.StatusCode), "Failed to create bucket", "bucketName", bucketName, "status", resp.StatusCode, "response", string(body), "payload", string(payload), "url", url)
 		}
-		return fmt.Errorf("failed to create bucket: %s", string(body))
+		return fmt.Errorf("failed to create bucket: %s", utils.ParseS3ErrorResponse(body))
 	}
 	return nil
 }
@@ -380,7 +379,7 @@ func (c *S3Client) DeleteBucket(ctx context.Context, bucketName string) error {
 		if logger.GetSink() != nil {
 			logger.Error(fmt.Errorf("unexpected status code: %d", resp.StatusCode), "Failed to delete bucket", "bucketName", bucketName, "status", resp.StatusCode, "response", string(body), "url", url)
 		}
-		return fmt.Errorf("failed to delete bucket: %s", string(body))
+		return fmt.Errorf("failed to delete bucket: %s", utils.ParseS3ErrorResponse(body))
 	}
 	return nil
 }

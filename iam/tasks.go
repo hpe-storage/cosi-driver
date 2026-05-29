@@ -32,8 +32,11 @@ func NewTask(taskId, systemId string, client *sdk.APIClient, ctx context.Context
 // Returns the running task by id (passed with s3policy instance)
 func (t *task) GetTask() (*sdk.Task, error) {
 	task, r, err := t.client.TasksAPI.GetTask(t.context, t.taskId).Execute()
-	if err == nil && r.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request failed while fetching taskId %s, err: %v", t.taskId, r)
+	if err != nil {
+		return task, utils.FormatIAMError(fmt.Sprintf("failed to fetch task %s", t.taskId), err)
+	}
+	if r.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch task %s (HTTP %d)", t.taskId, r.StatusCode)
 	}
 	return task, err
 }

@@ -129,6 +129,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Set socket permissions to allow the sidecar (running as a different UID) to connect.
+    // Unix domain sockets require write permission for clients to connect.
+    if err := os.Chmod(url.Path, 0666); err != nil {
+        log.Error(err, "failed to set socket permissions", "path", url.Path)
+        os.Exit(1)
+    }
+
 	// Start serving requests on the socket
 	err = server.Serve(lis)
 	if err != nil {

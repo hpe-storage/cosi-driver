@@ -1422,24 +1422,42 @@ func TestParseBucketParams(t *testing.T) {
 			errSubstr: "locking",
 		},
 		{
-			name: "locking=Enabled without retentionMode rejected",
+			name: "locking=Enabled without retentionMode accepted",
 			params: map[string]string{
 				"versioning":               "Enabled",
 				"locking":                  "Enabled",
 				"defaultRetentionInterval": "30d",
 			},
 			wantErr:   true,
-			errSubstr: "retentionMode",
+			errSubstr: "both be set or both be omitted",
 		},
 		{
-			name: "locking=Enabled without defaultRetentionInterval rejected",
+			name: "locking=Enabled without defaultRetentionInterval accepted",
 			params: map[string]string{
 				"versioning":    "Enabled",
 				"locking":       "Enabled",
 				"retentionMode": "GOVERNANCE",
 			},
 			wantErr:   true,
-			errSubstr: "defaultRetentionInterval",
+			errSubstr: "both be set or both be omitted",
+		},
+		{
+			name: "locking=Enabled without any retention settings accepted",
+			params: map[string]string{
+				"versioning": "Enabled",
+				"locking":    "Enabled",
+			},
+			check: func(t *testing.T, r utils.BucketRequest) {
+				if r.Locking != utils.FeatureEnabled {
+					t.Errorf("Locking = %q, want Enabled", r.Locking)
+				}
+				if r.RetentionMode != "" {
+					t.Errorf("RetentionMode = %q, want empty", r.RetentionMode)
+				}
+				if r.ObjectLockDays != 0 || r.ObjectLockYears != 0 {
+					t.Errorf("expected zero retention days/years")
+				}
+			},
 		},
 	}
 
@@ -1501,9 +1519,6 @@ func TestDriverCreateBucket_InvalidArgument(t *testing.T) {
 		}},
 		{"retention without locking", map[string]string{
 			"retentionMode": "GOVERNANCE", "defaultRetentionInterval": "30d",
-		}},
-		{"locking without retention settings", map[string]string{
-			"versioning": "Enabled", "locking": "Enabled",
 		}},
 	}
 	for _, c := range cases {

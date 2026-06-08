@@ -159,7 +159,7 @@ func (s *Server) DriverDeleteBucket(ctx context.Context, req *cosi.DriverDeleteB
 // DriverGrantBucketAccess grants access to a bucket for a specific account.
 // The account_name in the request is used as a unique identifier to create credentials.
 func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
-	s.log.Info("Received request to grant access to bucket.", "bucketName", req.BucketId, "AccountName", req.Name)
+	s.log.Info("Received request to grant access to bucket.", "bucketName", req.BucketId, "AccountName", utils.MaskName(req.Name))
 	ctx = context.WithValue(ctx, utils.LoggerKey, &s.log)
 	var eMsg string
 

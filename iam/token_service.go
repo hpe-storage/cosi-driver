@@ -60,7 +60,6 @@ func (t *token_service) buildTokenUrl() (uri string) {
 		t.log.Info("GLCP workspace ID provided, authenticating workspace based token request")
 		return fmt.Sprintf("%s/%s/%s/%s", t.glcpCloudUrl, GLCP_ACCESS_ENDPOINT_PREFIX, t.glcpWorkspaceId, GLCP_ACCESS_ENDPOINT_SUFFIX)
 	}
-	// TODO: Need to confirm with GLCP team if the legacy user is supported officially to use new endpoint.
 	t.log.Info("No GLCP workspace ID provided, going with legacy authentication for token request")
 	return fmt.Sprintf("%s/%s", t.glcpCloudUrl, GLCP_ACCESS_TOKEN_URL)
 }

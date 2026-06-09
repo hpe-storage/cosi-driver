@@ -47,14 +47,13 @@ The following copyright statements and licenses apply to the software components
 
 Third Party Components:
 
-    acl (access control list)  2.3.1  (GPL-2.0-only)
+    alternatives  1.24  (GPL-2.0-only)
     audit-libs  3.1.5  (LGPL-2.1-or-later)
     basesystem  11  (Public Domain)
     bash  5.1.8  (GPL-3.0-or-later)
     berkeleydb  5.0.58  (Sleepycat)
     bzip2-libs  1.0.8  (BSD)
     ca-certificates  2024.2.69_v8.0.303  (Public Domain)
-    chkconfig  1.24  (GPL-2.0-only)
     client-go  v0.35.3  (Apache-2.0)
     coreutils-single  8.32  (GPL-3.0-or-later)
     crypto-policies  20240828  (LGPL-2.1-only)
@@ -307,7 +306,7 @@ limitations under the License.
 GNU GENERAL PUBLIC LICENSE V2.0
 ================================================================================
 
-(acl (access control list), chkconfig, dnf-data, glibc, glibc-common, glibc-minimal-langpack, gmp, gobject-introspection, gpgme, keyutils-libs, langpacks-core-en, langpacks-en, libcap, libidn2, libreport-filesystem, libsigsegv, libunistring, lz4-libs, microdnf, redhat-release, rpm, rpm-libs)
+(alternatives, dnf-data, glibc, glibc-common, glibc-minimal-langpack, gmp, gobject-introspection, gpgme, keyutils-libs, langpacks-core-en, langpacks-en, libcap, libidn2, libreport-filesystem, libsigsegv, libunistring, lz4-libs, microdnf, redhat-release, rpm, rpm-libs)
 
 		    GNU GENERAL PUBLIC LICENSE
                        Version 2, June 1991

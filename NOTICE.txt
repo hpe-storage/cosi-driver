@@ -58,6 +58,7 @@ Third Party Components:
     coreutils-single  8.32  (GPL-3.0-or-later)
     crypto-policies  20240828  (LGPL-2.1-only)
     curl  7.76.1  (curl)
+    curl-minimal  7.76.1  (MIT)
     cyrus-sasl-lib  2.1.27  (BSD)
     dejavu-sans-fonts  2.37  (Bitstream-Vera)
     dejavu-sans-fonts  2.37  (Bitstream-Vera)
@@ -1887,7 +1888,7 @@ Julian Seward, jseward@acm.org
 bzip2/libbzip2 version 1.1.0 of 6 September 2010
 
 ********************************************************************************
-package: curl, libcurl-minimal
+package: curl, curl-minimal, libcurl-minimal
 ********************************************************************************
 
 The MIT License (MIT)

@@ -56,7 +56,12 @@ func (t *token_service) string() (s string) {
 }
 
 func (t *token_service) buildTokenUrl() (uri string) {
-	return fmt.Sprintf("%s/%s/%s/%s", t.glcpCloudUrl, GLCP_ACCESS_ENDPOINT_PREFIX, t.glcpWorkspaceId, GLCP_ACCESS_ENDPOINT_SUFFIX)
+	if len(t.glcpWorkspaceId) > 0 {
+		t.log.Info("GLCP workspace ID provided, authenticating workspace based token request")
+		return fmt.Sprintf("%s/%s/%s/%s", t.glcpCloudUrl, GLCP_ACCESS_ENDPOINT_PREFIX, t.glcpWorkspaceId, GLCP_ACCESS_ENDPOINT_SUFFIX)
+	}
+	t.log.Info("No GLCP workspace ID provided, going with legacy authentication for token request")
+	return fmt.Sprintf("%s/%s", t.glcpCloudUrl, GLCP_ACCESS_TOKEN_URL)
 }
 
 // Creates a fresh bearer token for the GLCP API user

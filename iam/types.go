@@ -8,6 +8,7 @@ import (
 
 var (
 	ACCESS_GRANT_TYPE           = "client_credentials"
+	GLCP_ACCESS_TOKEN_URL       = "as/token.oauth2"
 	GLCP_ACCESS_ENDPOINT_PREFIX = "authorization/v2/oauth2"
 	GLCP_ACCESS_ENDPOINT_SUFFIX = "token"
 	HTTP_REQUEST_TIMEOUT        = 30 * time.Second

@@ -9,12 +9,12 @@ help()
     # Display Help
     echo -e "\nCreate HPE COSI driver secret"
     echo -e "\nSyntax:"
-    echo -e "     hpe_create_cosi_secret.sh [-h|--help] [-s|--s3_credentials S3_ACCESS_KEY,S3_SECRET_KEY] [-e|--s3_endpoint ENDPOINT] [-g|--glcp_credentials GLCP_USER_CLIENTID,GLCP_USER_SECRET_KEY] [-d|--dscc_zone DSCC_ZONE] [-c|--cluster_serial_number CLUSTER_SERIAL_NUMBER] [--glcp_ca GLCP_CA_CERTIFICATE] [--cosi_secret_name COSI_SECRET_NAME] [--cosi_secret_namespace COSI_SECRET_NAMESPACE]\n"
+    echo -e "     hpe_create_cosi_secret.sh [-h|--help] [-s|--s3_credentials S3_ACCESS_KEY,S3_SECRET_KEY] [-e|--s3_endpoint ENDPOINT] [-g|--glcp_credentials GLCP_USER_CLIENTID,GLCP_USER_SECRET_KEY[,GLCP_WORKSPACE_ID]] [-d|--dscc_zone DSCC_ZONE] [-c|--cluster_serial_number CLUSTER_SERIAL_NUMBER] [--glcp_ca GLCP_CA_CERTIFICATE] [--cosi_secret_name COSI_SECRET_NAME] [--cosi_secret_namespace COSI_SECRET_NAMESPACE]\n"
     echo -e "Options:"
     echo -e "-h|--help                                                                          Print this Help."
     echo -e "-s|--s3_credentials S3_ACCESS_KEY,S3_SECRET_KEY                                    Specify the S3 admin user's access key and secret key separated by commas. (REQUIRED) E.g. -s \"testuser,testuser\""
     echo -e "-e|--s3_endpoint ENDPOINT                                                          Specify the S3 endpoint of the HPE Alletra Storage MP X10000 object storage array, which is derived from its S3 DNS Subdomain name. (REQUIRED) E.g. -e \"http://demo-s3-cluster.storage.com\""
-    echo -e "-g|--glcp_credentials GLCP_USER_CLIENTID,GLCP_USER_SECRET_KEY,GLCP_WORKSPACE_ID    Specify the GLCP user's client ID, secret key, and workspace ID separated using commas. (REQUIRED) E.g. -g \"xxxxxxx-zzz-123-3456,zzzzzrandomxxxxxxzzzzz,393xxxxxxxrandomxxxxdummyxx0c773\""
+    echo -e "-g|--glcp_credentials GLCP_USER_CLIENTID,GLCP_USER_SECRET_KEY,GLCP_WORKSPACE_ID    Specify the GLCP user's client ID and secret key (REQUIRED), and optionally the workspace ID, separated using commas. If the workspace ID is omitted, legacy authentication is used. E.g. -g \"xxxxxxx-zzz-123-3456,zzzzzrandomxxxxxxzzzzz,393xxxxxxxrandomxxxxdummyxx0c773\""
     echo -e "-d|--dscc_zone DSCC_ZONE                                                           Specify the DSCC zone. (REQUIRED) E.g. -d \"us1.data.cloud.hpe.com\""
     echo -e "-c|--cluster_serial_number CLUSTER_SERIAL_NUMBER                                   Specify the serial number of the cluster. (REQUIRED) E.g. -c \"XX0000000000XX\""
     echo -e "--glcp_ca GLCP_CA_CERTIFICATE                                                      Specify the base64 encoded CA certificate for on-premise DSCC. (OPTIONAL) E.g. --glcp_ca \"LS0tLS1CRUdJTi...\""
@@ -51,9 +51,14 @@ create_secret()
         --from-literal=endpoint=${s3_endpoint} \
         --from-literal=glcpUserClientId=${glcp_creds[0]} \
         --from-literal=glcpUserSecretKey=${glcp_creds[1]} \
-        --from-literal=glcpWorkspaceId=${glcp_creds[2]} \
         --from-literal=dsccZone=$dscc_zone \
         --from-literal=clusterSerialNumber=$cluster_serial_number"
+    
+    # Add GLCP workspace ID if provided (optional; enables workspace-based authentication)
+    if [[ -n "${glcp_creds[2]}" ]]; then
+        echo "Including GLCP workspace ID for workspace-based authentication..."
+        kubectl_cmd="$kubectl_cmd --from-literal=glcpWorkspaceId=${glcp_creds[2]}"
+    fi
     
     # Add CA certificate if provided
     if [[ -n "$glcp_ca" ]]; then
@@ -159,7 +164,7 @@ option="$1"
 done
 
 # If all mandatory options are not present, return error.
-if [[ "${#s3_creds[@]}" -ne 2 || ! "$s3_endpoint" || "${#glcp_creds[@]}" -ne 3 || ! "$dscc_zone" || ! "$cluster_serial_number" ]]
+if [[ "${#s3_creds[@]}" -ne 2 || ! "$s3_endpoint" || "${#glcp_creds[@]}" -lt 2 || "${#glcp_creds[@]}" -gt 3 || ! "$dscc_zone" || ! "$cluster_serial_number" ]]
 then
     echo "Options -s, -e, -g, -d and -c are required. Please refer Help for more details."
     help

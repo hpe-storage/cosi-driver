@@ -185,4 +185,11 @@ func Test_buildTokenUrl(t *testing.T) {
 		expected := autUri + "/authorization/v2/oauth2/workspace-1234/token"
 		assert.Equal(t, uri, expected)
 	})
+
+	t.Run("buildTokenUrl without workspace ID (legacy)", func(t *testing.T) {
+		ts := NewTokenService(autUri, "client-id", "client-secret", "", "", "", &log)
+		uri := ts.buildTokenUrl()
+		expected := autUri + "/as/token.oauth2"
+		assert.Equal(t, uri, expected)
+	})
 }

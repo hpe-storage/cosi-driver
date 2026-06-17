@@ -732,10 +732,9 @@ func getGLCPCDetails(data map[string][]byte) (*utils.IAMCredentials, error) {
 	if err != nil {
 		return nil, err
 	}
-	glcpWorkspaceId, err := getData(utils.GLCP_WORKSPACE_ID)
-	if err != nil {
-		return nil, err
-	}
+	// glcpWorkspaceId is optional. When it is absent from the secret, the token
+	// service falls back to legacy (non-workspace) authentication.
+	glcpWorkspaceId, _ := getData(utils.GLCP_WORKSPACE_ID)
 	dsccZone, err := getData(utils.DSCC_ZONE)
 	if err != nil {
 		return nil, err

@@ -427,7 +427,7 @@ func MaskName(name string) string {
 		return name
 	}
 	if l > 6 {
-		return replaceWithXx(name, 2, l-4)
+		return replaceWithXx(name, 0, l-4)
 	}
 	return replaceWithXx(name, 0, l-1)
 }

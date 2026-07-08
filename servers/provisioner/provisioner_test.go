@@ -534,7 +534,7 @@ func TestDriverGrantBucketAccess(t *testing.T) {
 				},
 			},
 			want: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: maskedAccessName,
+				AccountId: accessName,
 				Credentials: map[string]*cosi.CredentialDetails{
 					"s3": {Secrets: map[string]string{
 						"accessKeyID":     "user_bucket1_user",

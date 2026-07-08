@@ -417,7 +417,7 @@ func TestMaskName(t *testing.T) {
 		{
 			name:  "typical user name with UUID",
 			input: "user_ba-edummy-forthe-sake-ofex-ampled918fa73",
-			want:  "usxx_xx-xxxxxx-xxxxxx-xxxx-xxxx-xxxxxxxxxfa73",
+			want:  "xxxx_xx-xxxxxx-xxxxxx-xxxx-xxxx-xxxxxxxxxfa73",
 		},
 		{
 			name:  "short string exactly 4 chars",
@@ -435,9 +435,9 @@ func TestMaskName(t *testing.T) {
 			want:  "xxxxxf",
 		},
 		{
-			name:  "7 chars keeps first 2 and last 4",
+			name:  "7 chars masks all but last 4",
 			input: "abcdefg",
-			want:  "abxdefg",
+			want:  "xxxdefg",
 		},
 		{
 			name:  "short string 3 chars",
@@ -457,27 +457,27 @@ func TestMaskName(t *testing.T) {
 		{
 			name:  "preserves hyphens in long string",
 			input: "a-b-c-d-e",
-			want:  "a-x-x-d-e",
+			want:  "x-x-x-d-e",
 		},
 		{
 			name:  "preserves underscores in long string",
 			input: "a_b_c_d_e",
-			want:  "a_x_x_d_e",
+			want:  "x_x_x_d_e",
 		},
 		{
 			name:  "prefix with underscore",
 			input: "acp_12345678",
-			want:  "acx_xxxx5678",
+			want:  "xxx_xxxx5678",
 		},
 		{
 			name:  "all hyphens preserved",
 			input: "aa----bb",
-			want:  "aa----bb",
+			want:  "xx----bb",
 		},
 		{
 			name:  "numeric string",
 			input: "1234567890",
-			want:  "12xxxx7890",
+			want:  "xxxxxx7890",
 		},
 		{
 			name:  "empty string",

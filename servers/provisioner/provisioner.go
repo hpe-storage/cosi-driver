@@ -227,7 +227,7 @@ func (s *Server) DriverGrantBucketAccess(ctx context.Context, req *cosi.DriverGr
 	credMap["s3"] = cred
 
 	return &cosi.DriverGrantBucketAccessResponse{
-		AccountId:   maskedBucketAccessName,
+		AccountId:   bucketAccessName,
 		Credentials: credMap,
 	}, status.Error(codes.OK, fmt.Sprintf("Bucket access granted successfully for '%s' on bucket '%s'", bucketAccessName, bucketName))
 }
@@ -240,6 +240,7 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, req *cosi.DriverR
 
 	bucketName := req.BucketId
 	accessName := req.AccountId
+	s.log.Info("Revoking bucket access", "bucketName", bucketName, "accountName", accessName)
 	userName := utils.USER_PREFIX + accessName
 	policyName := utils.ACCESS_POLICY_PREFIX + accessName
 	var eMsg string

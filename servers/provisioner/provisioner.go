@@ -240,7 +240,6 @@ func (s *Server) DriverRevokeBucketAccess(ctx context.Context, req *cosi.DriverR
 
 	bucketName := req.BucketId
 	accessName := req.AccountId
-	s.log.Info("Revoking bucket access", "bucketName", bucketName, "accountName", accessName)
 	userName := utils.USER_PREFIX + accessName
 	policyName := utils.ACCESS_POLICY_PREFIX + accessName
 	var eMsg string

@@ -10,8 +10,6 @@ This repository contains the sources for the HPE Container Object Storage Interf
 
 The COSI driver is released with a container images published on Quay. This is in turn referenced from deployment manifests, Helm charts. Relases are rolled up on the [HPE Storage Container Orchestrator Documentation](https://scod.hpedev.io/cosi_driver/index.html#compatibility_and_support) (SCOD) portal.
 
-- Release notes are hosted in [release-notes](release-notes).
-
 ## Deploying and using the COSI driver on Kubernetes
 
 All documentation for installing and using the COSI driver is available on [SCOD](https://scod.hpedev.io/cosi_driver/deployment.html).

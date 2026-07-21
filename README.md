@@ -8,7 +8,7 @@ This repository contains the sources for the HPE Container Object Storage Interf
 
 ## Releases
 
-The COSI driver is released with a container images published on Quay. This is in turn referenced from deployment manifests, Helm charts. Releases are rolled up on the [HPE Storage Container Orchestrator Documentation](https://scod.hpedev.io/cosi_driver/index.html#compatibility_and_support) (SCOD) portal.
+The COSI driver is released with container images published on Quay. These are in turn referenced from deployment manifests and Helm charts. Releases are rolled up on the [HPE Storage Container Orchestrator Documentation](https://scod.hpedev.io/cosi_driver/index.html#compatibility_and_support) (SCOD) portal.
 
 - Release notes are hosted in [release-notes](release-notes).
 
@@ -38,11 +38,11 @@ Use [SCOD](https://scod.hpedev.io/legal/support) facility for formal support of 
 
 ## Community
 
-Please file any issues, questions or feature requests you may have [here](https://github.com/hpe-storage/cosi-driver/issues) (do not use this facility for support inquiries of your HPE storage product, see [SCOD](https://scod.hpedev.io/legal/support) for support)
+Please file any issues, questions or feature requests you may have [here](https://github.com/hpe-storage/cosi-driver/issues) (do not use this facility for support inquiries of your HPE storage product, see [SCOD](https://scod.hpedev.io/legal/support) for support).
 
 ## Contributing
 
-We value all feedback and contributions. If you find any issues or want to contribute, please feel free to open an issue or file a PR. More details in [CONTRIBUTING.md](CONTRIBUTING.md)
+We value all feedback and contributions. If you find any issues or want to contribute, please feel free to open an issue or file a PR. More details in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

@@ -1,6 +1,6 @@
 # Bash script to create a Kubernetes secret for the admin user of the HPE COSI driver
 
-This script is responsible for creating the Kubernetes secret of the HPE COSI driver's admin user. It creates a namespace for the secret, checks if any older secret with the same name exists  and deletes it if found and creates a new secret with data provided as input arguments to the script. The secret's name and namespace will be displayed in the terminal upon successful execution of the script.
+This script is responsible for creating the Kubernetes secret of the HPE COSI driver's admin user. It creates a namespace for the secret, checks if any older secret with the same name exists and deletes it if found, and creates a new secret with data provided as input arguments to the script. The secret's name and namespace will be displayed in the terminal upon successful execution of the script.
 
 ## Prerequisites
 

@@ -1,4 +1,4 @@
-# © Copyright 2026 Hewlett Packard Enterprise Development LP
+© Copyright Hewlett Packard Enterprise Development LP
 
 # builder image
 FROM --platform=$BUILDPLATFORM registry.access.redhat.com/ubi9/ubi:9.8-1785807559 AS build

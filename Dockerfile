@@ -4,7 +4,7 @@
 FROM --platform=$BUILDPLATFORM registry.access.redhat.com/ubi9/ubi:9.8-1785807559 AS build
 # install prereqs
 RUN dnf install -y make golang
-ENV GOVERSION="go1.25.0"
+ENV GOVERSION="go1.26.5"
 RUN go install golang.org/dl/$GOVERSION@latest
 ENV PATH="/root/go/bin:$PATH"
 RUN $GOVERSION download

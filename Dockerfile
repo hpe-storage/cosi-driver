@@ -1,7 +1,7 @@
-# © Copyright 2024 Hewlett Packard Enterprise Development LP
+© Copyright Hewlett Packard Enterprise Development LP
 
 # builder image
-FROM --platform=$BUILDPLATFORM registry.access.redhat.com/ubi9/ubi:9.5-1744101466 AS build
+FROM --platform=$BUILDPLATFORM registry.access.redhat.com/ubi9/ubi:9.8-1785807559 AS build
 # install prereqs
 RUN dnf install -y make golang
 ENV GOVERSION="go1.26.5"
@@ -28,7 +28,7 @@ RUN make ARCH=$TARGETARCH build
 ARG RUN_TESTS
 RUN if [ "$RUN_TESTS" = "true" ]; then make test; fi
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1742914212
+FROM registry.access.redhat.com/ubi9/ubi-micro:9.8-1784702951
 
 LABEL name="HPE COSI Driver for Kubernetes" \
     maintainer="HPE Storage" \
@@ -40,6 +40,9 @@ LABEL name="HPE COSI Driver for Kubernetes" \
     io.k8s.description="The HPE COSI Driver for Kubernetes enables container orchestrators to manage the life-cycle of object storage resources."
 
 COPY LICENSE /licenses/
+
+# Copy CA bundle from builder stage (ubi-micro does not include ca-certificates)
+COPY --from=build /etc/pki/tls/certs/ca-bundle.crt /etc/pki/tls/certs/ca-bundle.crt
 
 RUN echo "cosi-driver:x:1000:1000::/home/cosi-driver:/sbin/nologin" >> /etc/passwd && \
     echo "cosi-driver:x:1000:" >> /etc/group

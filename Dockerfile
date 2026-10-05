@@ -1,10 +1,10 @@
-© Copyright Hewlett Packard Enterprise Development LP
+# © Copyright Hewlett Packard Enterprise Development LP
 
 # builder image
 FROM --platform=$BUILDPLATFORM registry.access.redhat.com/ubi9/ubi:9.8-1785807559 AS build
 # install prereqs
 RUN dnf install -y make golang
-ENV GOVERSION="go1.26.5"
+ENV GOVERSION="go1.27.1"
 RUN go install golang.org/dl/$GOVERSION@latest
 ENV PATH="/root/go/bin:$PATH"
 RUN $GOVERSION download
@@ -33,7 +33,7 @@ FROM registry.access.redhat.com/ubi9/ubi-micro:9.8-1784702951
 LABEL name="HPE COSI Driver for Kubernetes" \
     maintainer="HPE Storage" \
     vendor="HPE" \
-    version="2.0.0" \
+    version="2.1.0" \
     summary="HPE COSI Driver for Kubernetes" \
     description="The HPE COSI Driver for Kubernetes enables container orchestrators to manage the life-cycle of object storage resources." \
     io.k8s.display-name="HPE COSI Driver for Kubernetes" \
